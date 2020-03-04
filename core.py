@@ -1,34 +1,34 @@
 import numpy as np
 from numpy import linalg as la
-import math
+from Ffun import f
+from propagator import propagate
 
 
 def __derivative():
     return np.zeros((6, 2))
 
 
-def core(X, Xoffset, dt, delta, params):
-    # yobs = F(propagate(X,m,dt,dt/1000));
-    # ypred = F(propagate(X+Xoffset,m,dt,dt/1000));
+def core(x, xoffset, dt, params):
+    yobs = f(propagate(x, dt, params))
+    ypred = f(propagate(x+xoffset, dt, params))
 
-    yobs = np.zeros((2, 1))
-    ypred = np.zeros((2, 1))
-
-    Xi = yobs - ypred
+    xi = yobs - ypred
 
     hello = np.zeros(20, 1)
 
     for i in range(0, 10):  # stopping criteria
-        hello[i] = la.norm(Xi)
+        hello[i] = la.norm(xi)
 
-        B = -__derivative()
-        C = np.matmul(B.transpose(), B)
-        D = -np.matmul(B.transpose(), Xi)
+        b = -__derivative()
+        c = np.matmul(b.transpose(), b)
+        d = -np.matmul(b.transpose(), xi)
 
-        deltaX = np.matmul(la.inv(C), D)
+        deltax = np.matmul(la.inv(c), d)
 
-        Xnew = X + deltaX
+        xnew = x + deltax
 
-        # ypred = F(propagate(Xnew,m,dt,dt/1000))
-        X = Xnew
-        Xi = yobs - ypred
+        ypred = f(propagate(xnew, dt, params))
+        x = xnew
+        xi = yobs - ypred
+
+    return xnew
