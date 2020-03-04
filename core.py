@@ -16,7 +16,7 @@ def core(x, xoffset, dt, params):
 
     hello = np.zeros(20, 1)
 
-    for i in range(0, 10):  # stopping criteria
+    for i in range(0, 10):  # stopping criteria, should be changed to be based on deltaX
         hello[i] = la.norm(xi)
 
         b = -__derivative()
