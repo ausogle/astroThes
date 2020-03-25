@@ -5,7 +5,7 @@ from propagator import propagate
 
 
 def __direction_isolator(delta, i):
-    m = np.zeros(6)
+    m = np.zeros((6, 6))
     m[i][i] = 1
     return np.matmul(m, delta)
 
