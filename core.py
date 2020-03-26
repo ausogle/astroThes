@@ -10,14 +10,11 @@ def __direction_isolator(delta, i):
     return np.matmul(m, delta)
 
 
-def __derivative(x, dt, params):
+def __derivative(x, delta, dt, params):
     n = 2
     m = 6
-    dr = .1
-    dv = .001
-    delta = np. array([dr, dr, dr, dv, dv, dv])
 
-    a = np.zeros(n, m)
+    a = np.zeros((n, m))
     for j in range(0, m-1):
         temp1 = propagate(x + __direction_isolator(delta, j), dt, params)
         temp2 = propagate(x - __direction_isolator(delta, j), dt, params)
@@ -30,6 +27,10 @@ def __derivative(x, dt, params):
 
 
 def core(x, xoffset, dt, params):
+    dr = .1
+    dv = .001
+    delta = np. array([dr, dr, dr, dv, dv, dv])
+
     yobs = f(propagate(x, dt, params))
     ypred = f(propagate(x+xoffset, dt, params))
 
@@ -40,7 +41,7 @@ def core(x, xoffset, dt, params):
     for i in range(0, 10):  # stopping criteria, should be changed to be based on deltaX
         hello[i] = la.norm(xi)
 
-        b = -__derivative()
+        b = -__derivative(x, delta, dt, params)
         c = np.matmul(b.transpose(), b)
         d = -np.matmul(b.transpose(), xi)
 
