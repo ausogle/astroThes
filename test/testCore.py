@@ -34,6 +34,18 @@ def fun(rr, vv):
     return Ffun.f(rr)
 
 
+def fun2(a, b):
+    fun(a, b)
+
+
+def test_fun2():
+    sample = np.array([100, 100, 1])
+    output = np.array([100, 1])
+    with patch(mockito.invocation.MatchingInvocation.compare, xcompare):
+        when(Ffun).f(sample).thenReturn(output)
+        result = fun2(sample, 45)
+        assert xcompare(result, output)
+
 def test_fun():
     sample = np.array([100, 100, 1])
     output = np.array([100, 1])
