@@ -16,9 +16,13 @@ def __derivative(x, delta, dt, params):
 
     a = np.zeros((n, m))
     for j in range(0, m-1):
+        x1 = x + __direction_isolator(delta, j)
         temp1 = propagate(x + __direction_isolator(delta, j), dt, params)
         temp2 = propagate(x - __direction_isolator(delta, j), dt, params)
-        temp3 = (f(temp1) - f(temp2))/(2*delta[j])
+        temp5 = f(temp1)
+        temp4 = f(temp2)
+        # temp3 = (f(temp1) - f(temp2))/(2*delta[j])
+        temp3 = (temp5 - temp4) / (2 * delta[j])
 
         for i in range(0, n-1):
             a[i][j] = temp3[i]
