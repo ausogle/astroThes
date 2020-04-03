@@ -1,13 +1,9 @@
-import numpy as np
-from poliastro.twobody import Orbit
-from poliastro.twobody.propagation import cowell
-from poliastro.bodies import Earth
-from poliastro.core.perturbations import J2_perturbation
-from astropy import units as u
-from astropy.time import Time
+from propagator import propagate
 
-
-def propagate(x, dt, params):
+def test_propagate():
+    x = ??
+    dt = ??
+    params = ??
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
     epoch = Time("2018-08-17 12:05:50", scale="tbd")

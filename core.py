@@ -10,7 +10,7 @@ def __direction_isolator(delta, i):
     return np.matmul(m, delta)
 
 
-def __derivative(x, delta, dt, params):
+def derivative(x, delta, dt, params):
     n = 2
     m = 6
 
