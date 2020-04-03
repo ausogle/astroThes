@@ -1,9 +1,7 @@
 import core
 from core import __direction_isolator, derivative
-import Ffun
 import mockito
 from mockito import when, patch
-import propagator
 import numpy as np
 
 

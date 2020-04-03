@@ -15,7 +15,7 @@ def derivative(x, delta, dt, params):
     m = 6
 
     a = np.zeros((n, m))
-    for j in range(0, m-1):
+    for j in range(0, m):
         x1 = x + __direction_isolator(delta, j)
         temp1 = propagate(x + __direction_isolator(delta, j), dt, params)
         temp2 = propagate(x - __direction_isolator(delta, j), dt, params)
@@ -24,7 +24,7 @@ def derivative(x, delta, dt, params):
         # temp3 = (f(temp1) - f(temp2))/(2*delta[j])
         temp3 = (temp5 - temp4) / (2 * delta[j])
 
-        for i in range(0, n-1):
+        for i in range(0, n):
             a[i][j] = temp3[i]
 
     return a

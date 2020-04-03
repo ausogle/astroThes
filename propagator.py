@@ -10,7 +10,7 @@ from astropy.time import Time
 def propagate(x, dt, params):
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
-    epoch = Time("2018-08-17 12:05:50", scale="tbd")
+    epoch = Time("2018-08-17 12:05:50", scale="tdb")
     # this needs to come out of params
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
     sat_f = sat_i.propagate(dt * u.s, method=cowell, ad=J2_perturbation, J2=Earth.J2.value, R=Earth.R.to(u.km).value)
