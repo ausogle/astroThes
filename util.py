@@ -3,6 +3,51 @@ from numpy import linalg as la
 import math
 
 
+class ObsParams:
+    def __init__(self, obs_loc, obs_frame, epoch_f):
+        self.obs_loc = obs_loc
+        self.obs_frame = obs_frame
+        self.epoch_f = epoch_f
+
+
+class PropParams:
+    def __init__(self, epoch_i, epoch_f):
+        self.epoch_i = epoch_i
+        self.epoch_f = epoch_f
+        self.perturbations = {}
+
+    def add_perturbation(self, name, perturbation):
+        self.perturbations[name] = perturbation
+
+
+class J2:
+    def __init__ (self, J2, R):
+        self.J2 = J2
+        self.R = R
+
+
+class J3:
+    def __init__ (self, J3, R):
+        self.J2 = J3
+        self.R = R
+
+
+class Drag:
+    def __init__(self, R, C_D, A, m, H0, R0):
+        self.R = R
+        self.C_D = C_D
+        self.A = A
+        self.m = m
+        self.H0 = H0
+        self.R0 = R0
+
+
+class ThirdBody:
+    def __init__(self, k_third, third_body):
+        self.k_third = k_third
+        self.third_body = third_body
+
+
 def rv_to_oe(rr, vv):
     a = __get_a(rr, vv)
     e = __get_e(rr, vv)

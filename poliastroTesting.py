@@ -26,10 +26,6 @@ def a_d(t0, state, k, J2, J3, R, C_D, A, m, H0, rho0, k_third, third_body):
            + J3_perturbation(t0, state, k, J3, R) + three_body(t0, state, k, k_third, third_body)
 
 
-def a_2(t0, state, k, k_third, third_body):
-    return three_body(t0, state, k, k_third, third_body)
-
-
 C_D = 1
 A = 10
 m = 1000
