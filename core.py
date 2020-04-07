@@ -10,15 +10,15 @@ def __direction_isolator(delta, i):
     return np.matmul(m, delta)
 
 
-def derivative(x, delta, dt, obs_params, prop_params):
+def derivative(x, delta, obs_params, prop_params):
     n = 2
     m = 6
 
     a = np.zeros((n, m))
     for j in range(0, m):
         x1 = x + __direction_isolator(delta, j)
-        temp1 = propagate(x + __direction_isolator(delta, j), dt, prop_params)
-        temp2 = propagate(x - __direction_isolator(delta, j), dt, prop_params)
+        temp1 = propagate(x + __direction_isolator(delta, j), prop_params)
+        temp2 = propagate(x - __direction_isolator(delta, j), prop_params)
         temp3 = (f(temp1, obs_params) - f(temp2, obs_params)) / (2 * delta[j])
 
         for i in range(0, n):
@@ -32,8 +32,8 @@ def milano(x, xoffset, dt, obs_params, prop_params):
     dv = .001
     delta = np. array([dr, dr, dr, dv, dv, dv])
 
-    yobs = f(propagate(x, dt, prop_params), obs_params)
-    ypred = f(propagate(x+xoffset, dt, prop_params), obs_params)
+    yobs = f(propagate(x, prop_params), obs_params)
+    ypred = f(propagate(x+xoffset, prop_params), obs_params)
 
     xi = yobs - ypred
 
@@ -42,7 +42,7 @@ def milano(x, xoffset, dt, obs_params, prop_params):
     for i in range(0, 10):  # stopping criteria, should be changed to be based on deltaX
         hello[i] = la.norm(xi)
 
-        b = -derivative(x, delta, dt, obs_params, prop_params)
+        b = -derivative(x, delta, obs_params, prop_params)
         c = np.matmul(b.transpose(), b)
         d = -np.matmul(b.transpose(), xi)
 

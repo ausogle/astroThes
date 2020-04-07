@@ -11,9 +11,9 @@ class ObsParams:
 
 
 class PropParams:
-    def __init__(self, epoch_i, epoch_f):
-        self.epoch_i = epoch_i
-        self.epoch_f = epoch_f
+    def __init__(self, dt, epoch_f):
+        self.dt = dt
+        self.epoch = epoch_f
         self.perturbations = {}
 
     def add_perturbation(self, name, perturbation):
@@ -33,13 +33,13 @@ class J3:
 
 
 class Drag:
-    def __init__(self, R, C_D, A, m, H0, R0):
+    def __init__(self, R, C_D, A, m, H0, rho0):
         self.R = R
         self.C_D = C_D
         self.A = A
         self.m = m
         self.H0 = H0
-        self.R0 = R0
+        self.rho0 = rho0
 
 
 class ThirdBody:
