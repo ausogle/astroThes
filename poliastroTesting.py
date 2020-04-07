@@ -42,3 +42,30 @@ print(output)
 sat_moon = sat_i.propagate(dt * u.s, method=cowell, ad=a_2, k_third=Moon.k.to(u.km ** 3 / u.s ** 2).value, third_body=body_moon)
 print(sat_moon.r)
 print(sat_moon.v)
+
+
+def perturbation_accel(params, t0, state, k):
+    functions = []
+    if "J2" in params.perturbations:
+        perturbation = params.perturbations.get("J2")
+        functions.append(J2_perturbation(t0, state, k, perturbation.J2, perturbation.R))
+    if "J3" in params.perturbations:
+        perturbation = params.perturbations.get("J3")
+        functions.append(J3_perturbation(t0, state, k, perturbation.J3, perturbation.R))
+    if "Drag" in params.perturbations:
+        perturbation = params.perturbations.get("Drag")
+        functions.append(atmospheric_drag(t0, state, k, perturbation.R, perturbation.C_D,
+                                          perturbation.A, perturbation.m, perturbation.H0, perturbation.rh0))
+    if "Moon" in params.perturbations:
+        perturbation = params.perturbations.get("Moon")
+        functions.append(three_body(t0, state, k, perturbation.k_third, perturbation.third_body))
+    return sum(functions)
+
+
+def summation(lost):
+    if len(lost) == 0:
+        return None
+    output = lost[0]
+    for i in range(1, len(lost)):
+        output += lost[i]
+    return output

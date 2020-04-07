@@ -34,10 +34,20 @@ def perturbation_accel(params, t0, state, k):
     if "Moon" in params.perturbations:
         perturbation = params.perturbations.get("Moon")
         functions.append(three_body(t0, state, k, perturbation.k_third, perturbation.third_body))
+    return sum(functions)
 
 
-def a_d(t0, state, k, J2, J3, R, C_D, A, m, H0, rho0, k_third, third_body):
-    return J2_perturbation(t0, state, k, J2, R) + atmospheric_drag(t0, state, k, R, C_D, A, m, H0, rho0) \
-        + J3_perturbation(t0, state, k, J3, R) + three_body(t0, state, k, k_third, third_body)
+def summation(lost):
+    if len(lost) == 0:
+        return None
+    output = lost[0]
+    for i in range(1, len(lost)):
+        output += lost[i]
+    return output
+
+#
+# def a_d(t0, state, k, J2, J3, R, C_D, A, m, H0, rho0, k_third, third_body):
+#     return J2_perturbation(t0, state, k, J2, R) + atmospheric_drag(t0, state, k, R, C_D, A, m, H0, rho0) \
+#         + J3_perturbation(t0, state, k, J3, R) + three_body(t0, state, k, k_third, third_body)
 
 
