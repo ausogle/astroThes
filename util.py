@@ -28,7 +28,7 @@ class J2:
 
 class J3:
     def __init__ (self, J3, R):
-        self.J2 = J3
+        self.J3 = J3
         self.R = R
 
 
