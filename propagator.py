@@ -1,4 +1,5 @@
 import numpy as np
+from Enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
@@ -24,15 +25,15 @@ def propagate(x, params):
 
 def a_d(t0, state, k, perturbations):
     fun = []
-    if "J2" in perturbations:
-        perturbation = perturbations.get("J2")
+    if Perturbations.J2.value in perturbations:
+        perturbation = perturbations.get(Perturbations.J2.value)
         fun.append(J2_perturbation(t0, state, k, perturbation.J2, perturbation.R))
-    if "Drag" in perturbations:
-        perturbation = perturbations.get("Drag")
+    if Perturbations.Drag.value in perturbations:
+        perturbation = perturbations.get(Perturbations.Drag.value)
         fun.append(atmospheric_drag(t0, state, k, perturbation.R, perturbation.C_D, perturbation.A, perturbation.m,
                                     perturbation.H0, perturbation.rho0))
-    if "J3" in perturbations:
-        perturbation = perturbations.get("J3")
+    if Perturbations.J3.value in perturbations:
+        perturbation = perturbations.get(Perturbations.J3.value)
         fun.append(J3_perturbation(t0, state, k, perturbation.J3, perturbation.R))
     # if "Moon" in perturbations:
     #     perturbation = perturbations.get("Moon")
@@ -47,12 +48,12 @@ def a_d(t0, state, k, perturbations):
 
     # To add additional, or improvements upon existing perturbations, everything must be included in this function.
 
-    def summation(lost):
-        if len(lost) == 0:
+    def summation(arr):
+        if len(arr) == 0:
             return None
-        output = lost[0]
-        for i in range(1, len(lost)):
-            output += lost[i]
+        output = arr[0]
+        for i in range(1, len(arr)):
+            output += arr[i]
         return output
 
     return summation(fun)

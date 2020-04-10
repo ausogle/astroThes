@@ -9,11 +9,12 @@ from poliastro.core.perturbations import J2_perturbation, J3_perturbation, atmos
 from astropy import units as u
 from astropy.time import Time
 import util
+import mockito
 
 
 def test_propagate_with_j2j3():
     x = [66666, 0, 0, 0, 2.451, 0]
-    dt = 1
+    dt = 100
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
     epoch = Time(2454283.0, format="jd", scale="tdb")
@@ -28,14 +29,14 @@ def test_propagate_with_j2j3():
     sat_f = sat_i.propagate(dt * u.s, method=cowell, ad=a_d_j2j3, J2=Earth.J2.value,
                             R=Earth.R.to(u.km).value, J3=Earth.J3.value)
     output_f = np.concatenate([sat_f.r.value, sat_f.v.value])
-    sat_custom = sat_i.propagate(dt * u.day, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
+    sat_custom = sat_i.propagate(dt * u.s, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
     output_custom = np.concatenate([sat_custom.r.value, sat_custom.v.value])
-    return xcompare(output_custom, output_f)
+    assert xcompare(output_custom, output_f)
 
 
 def test_propagate_with_drag():
     x = [66666, 0, 0, 0, 2.451, 0]
-    dt = 1
+    dt = 100
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
     epoch = Time(2454283.0, format="jd", scale="tdb")
@@ -52,13 +53,31 @@ def test_propagate_with_drag():
     sat_f = sat_i.propagate(dt * u.s, method=cowell, ad=atmospheric_drag,
                             R=Earth.R.to(u.km).value, C_D=C_D, A=A, m=m, H0=H0, rho0=rho0)
     output_f = np.concatenate([sat_f.r.value, sat_f.v.value])
-    sat_custom = sat_i.propagate(dt * u.day, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
+    sat_custom = sat_i.propagate(dt * u.s, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
     output_custom = np.concatenate([sat_custom.r.value, sat_custom.v.value])
-    return xcompare(output_custom, output_f)
+    assert xcompare(output_custom, output_f)
+
+
+def test_ad_equals_none():
+    x = [66666, 0, 0, 0, 2.451, 0]
+    r = x[0:3] * u.km
+    v = x[3:6] * u.km / u.s
+    epoch = Time(2454283.0, format="jd", scale="tdb")
+    sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
+    t = sat_i.period.to(u.s).value
+    sat_custom = sat_i.propagate(t * u.s, method=cowell, ad=None)
+    sat_poli = sat_i.propagate(t * u.s, method=cowell)
+    theoretical = sat_custom.r.value
+    experimental = sat_poli.r.value
+    assert xcompare(theoretical, experimental)
 
 
 def a_d_j2j3(t0, state, k, J2, J3, R):
     return J2_perturbation(t0, state, k, J2, R) + J3_perturbation(t0, state, k, J3, R)
+
+
+def a_d_nothing(t0, state, k):
+    return atmospheric_drag(t0, state, k, Earth.R.to(u.km).value, 0, 0, 1, 1, 0)
 
 
 def xcompare(a, b):

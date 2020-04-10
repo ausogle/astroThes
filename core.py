@@ -37,7 +37,7 @@ def milano(x, xoffset, dt, obs_params, prop_params):
 
     xi = yobs - ypred
 
-    hello = np.zeros(20, 1)
+    hello = np.zeros((20, 1))
 
     for i in range(0, 10):  # stopping criteria, should be changed to be based on deltaX
         hello[i] = la.norm(xi)
