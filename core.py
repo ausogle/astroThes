@@ -27,7 +27,7 @@ def derivative(x, delta, obs_params, prop_params):
     return a
 
 
-def milano(x, xoffset, dt, obs_params, prop_params):
+def milano(x, xoffset, obs_params, prop_params):
     dr = .1
     dv = .001
     delta = np. array([dr, dr, dr, dv, dv, dv])
@@ -39,19 +39,21 @@ def milano(x, xoffset, dt, obs_params, prop_params):
 
     hello = np.zeros((20, 1))
 
-    for i in range(0, 10):  # stopping criteria, should be changed to be based on deltaX
+    for i in range(0, 1):  # stopping criteria, should be changed to be based on deltaX
         hello[i] = la.norm(xi)
 
         b = -derivative(x, delta, obs_params, prop_params)
         c = np.matmul(b.transpose(), b)
         d = -np.matmul(b.transpose(), xi)
 
-        deltax = np.matmul(la.inv(c), d)
+        invC = la.inv(c) #cleverness required
+        deltax = np.matmul(invC, d)
 
         xnew = x + deltax
 
-        ypred = f(propagate(xnew, dt, prop_params), obs_params)
+        ypred = f(propagate(xnew, prop_params), obs_params)
         x = xnew
         xi = yobs - ypred
 
+    print(hello)
     return xnew

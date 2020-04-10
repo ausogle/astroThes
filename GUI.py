@@ -7,7 +7,7 @@ from astropy.time import Time
 from astropy import units as u
 
 x = np.array([66666, 0, 0, 0, -1.4551, 0])
-xoffset = np.array([100, 0, 0, 0, 0, 0])
+xoffset = np.array([1000, 0, 0, 0, 0, 0])
 
 epoch_i = Time("2018-08-17 12:05:50", scale="tdb")
 epoch_i.format = "jd"
@@ -21,5 +21,5 @@ J2 = J2(Earth.J2.value, Earth.R.to(u.km).value)
 prop_params = PropParams(dt, epoch_f)
 prop_params.add_perturbation(Perturbations.J2.value, J2)
 
-xout = milano(x, xoffset, dt, obs_params, prop_params)
+xout = milano(x, xoffset, obs_params, prop_params)
 print(xout)
