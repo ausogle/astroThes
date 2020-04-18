@@ -14,6 +14,14 @@ from astropy import units as u
 
 
 def propagate(x, params):
+    """
+    Propagates the state vector from moment of description to moment of observation in time another using the poliasto
+    library. Allows for custom perturbations.
+    :param x: State vector at time of original description
+    :param params: object which serves as catch all for relevant info. Includes dt or amount of time between initial
+    description to moment of observation, epoch of initial description, and perturbations to be included.
+    :return: Returns state vector at moment of observation
+    """
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
 
@@ -24,6 +32,17 @@ def propagate(x, params):
 
 
 def a_d(t0, state, k, perturbations):
+    """
+    Custom perturbation function that is passed directly to poliastro to be executed in their code, hence the need for
+    summation() to be included within. Current structure allows user to pick and chose which perturbations they would
+    like to include, requiring that the desired perturbation objects are created, filled, and passed.
+    :param t0: Required by poliastro
+    :param state: Required by poliastro
+    :param k: Required by poliastro (gravitational parameter-mu)
+    :param perturbations: Dictionary of perturbations desired by the user. Keys correspond to the perturbations Enum
+    class in Enum.py, while values correspond to objects in the util.py class.
+    :return: Returns a force that describes the impact of all desired perturbations
+    """
     fun = []
     if Perturbations.J2.value in perturbations:
         perturbation = perturbations.get(Perturbations.J2.value)
