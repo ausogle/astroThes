@@ -1,34 +1,12 @@
 import numpy as np
 from Ffun import f
+import pytest
 
 
-def test_f_1():
-    rr = np.array([100, 100, 0])
-    theoretical = np.array([45, 0])
-    experimental = f(rr, None)
-    comparison = theoretical == experimental
-    assert comparison.all()
-
-
-def test_f_2():
-    rr = np.array([100, 0, 0])
-    theoretical = np.array([0, 0])
-    experimental = f(rr, None)
-    comparison = theoretical == experimental
-    assert comparison.all()
-
-
-def test_f_3():
-    rr = np.array([0, 100, 0])
-    theoretical = np.array([90, 0])
-    experimental = f(rr, None)
-    comparison = theoretical == experimental
-    assert comparison.all()
-
-
-def test_f_4():
-    rr = np.array([0, 0, -100])
-    theoretical = np.array([0, -90])
-    experimental = f(rr, None)
-    comparison = theoretical == experimental
-    assert comparison.all()
+@pytest.mark.parametrize("rr, expected", [(np.array([100, 100, 0]), np.array([45, 0])),
+                                          (np.array([100, 0, 0]), np.array([0, 0])),
+                                          (np.array([0, 100, 0]), np.array([90, 0])),
+                                          (np.array([0, 0, -100]), np.array([0, -90]))])
+def test_prediction_function(rr, expected):
+    actual = f(rr, None)
+    assert np.array_equal(actual, expected)
