@@ -9,7 +9,6 @@ from poliastro.core.perturbations import J2_perturbation, J3_perturbation, atmos
 from astropy import units as u
 from astropy.time import Time
 import util
-import mockito
 
 
 def test_propagate_with_j2j3():
@@ -31,7 +30,7 @@ def test_propagate_with_j2j3():
     output_f = np.concatenate([sat_f.r.value, sat_f.v.value])
     sat_custom = sat_i.propagate(dt * u.s, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
     output_custom = np.concatenate([sat_custom.r.value, sat_custom.v.value])
-    assert xcompare(output_custom, output_f)
+    assert np.array_equal(output_custom, output_f)
 
 
 def test_propagate_with_drag():
@@ -55,7 +54,7 @@ def test_propagate_with_drag():
     output_f = np.concatenate([sat_f.r.value, sat_f.v.value])
     sat_custom = sat_i.propagate(dt * u.s, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
     output_custom = np.concatenate([sat_custom.r.value, sat_custom.v.value])
-    assert xcompare(output_custom, output_f)
+    assert np.array_equal(output_custom, output_f)
 
 
 def test_ad_equals_none():
@@ -69,7 +68,7 @@ def test_ad_equals_none():
     sat_poli = sat_i.propagate(t * u.s, method=cowell)
     theoretical = sat_custom.r.value
     experimental = sat_poli.r.value
-    assert xcompare(theoretical, experimental)
+    assert np.array_equal(theoretical, experimental)
 
 
 def a_d_j2j3(t0, state, k, J2, J3, R):
@@ -79,8 +78,3 @@ def a_d_j2j3(t0, state, k, J2, J3, R):
 def a_d_nothing(t0, state, k):
     return atmospheric_drag(t0, state, k, Earth.R.to(u.km).value, 0, 0, 1, 1, 0)
 
-
-def xcompare(a, b):
-    if isinstance(a, mockito.matchers.Matcher):
-        return a.matches(b)
-    return np.array_equal(a, b)

@@ -10,7 +10,7 @@ def test_direction_isolator():
     j = 2
     experimental = __direction_isolator(delta, j)
     theoretical = np.array([0, 0, 3, 0, 0, 0])
-    assert xcompare(theoretical, experimental)
+    assert np.array_equal(theoretical, experimental)
 
 
 def test_derivative():
@@ -45,7 +45,7 @@ def test_derivative():
         when(core).f(np.array([10, 20, 30, 40, 50, 54]), params).thenReturn(np.array([0, 0]))
         experimental = derivative(x, delta, params, params)
         theoretical = np.array(([1, 3, 5, 7, 9, 11], [2, 4, 6, 8, 10, 12]))
-        assert xcompare(theoretical, experimental)
+        assert np.array_equal(theoretical, experimental)
 
 
 def xcompare(a, b):
