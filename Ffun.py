@@ -1,9 +1,11 @@
 import math
 import numpy as np
 from numpy import linalg as la
+from typing import List
+from util import ObsParams
 
 
-def f(rr, obs_params):
+def f(rr: np.ndarray, obs_params: ObsParams) -> np.ndarray:
     """
     Prediction function. Should simulate the angles a telescope would measure if located at the center of the Earth.
     Will be expanded.

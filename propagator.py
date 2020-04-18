@@ -6,6 +6,8 @@ from poliastro.bodies import Earth
 from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation
 from poliastro.core.perturbations import third_body as three_body
 from astropy import units as u
+from util import PropParams
+from typing import Dict
 
 
 # from poliastro.ephem import build_ephem_interpolant
@@ -13,7 +15,7 @@ from astropy import units as u
 # Need to make the third body values here
 
 
-def propagate(x, params):
+def propagate(x: np.ndarray, params: PropParams) -> np.ndarray:
     """
     Propagates the state vector from moment of description to moment of observation in time another using the poliasto
     library. Allows for custom perturbations.
@@ -31,7 +33,7 @@ def propagate(x, params):
     return output
 
 
-def a_d(t0, state, k, perturbations):
+def a_d(t0, state, k, perturbations: Dict):
     """
     Custom perturbation function that is passed directly to poliastro to be executed in their code, hence the need for
     summation() to be included within. Current structure allows user to pick and chose which perturbations they would
