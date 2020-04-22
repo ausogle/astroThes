@@ -57,6 +57,11 @@ def get_delta_x_from_qr_factorization(a: np.matrix, b: np.ndarray) -> np.ndarray
 
 
 def invert_svd(a: np.matrix) -> np.matrix:
+    """
+    Inverts a matrix using singular value decomposition function in numpy
+    :param a: matrix that needs to be inverted
+    :return: multiplicative inverse of a
+    """
     u, s, vh = np.linalg.svd(a)
     d = np.diag(s)
     ainv = np.matmul(np.matmul(vh.transpose(), np.linalg.inv(d)), u.transpose())
