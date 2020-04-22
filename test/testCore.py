@@ -1,5 +1,5 @@
-import core
-from core import __direction_isolator, derivative
+from src import core
+from src.core import __direction_isolator, derivative
 import mockito
 from mockito import when, patch
 import numpy as np

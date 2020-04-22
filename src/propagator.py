@@ -1,12 +1,11 @@
 import numpy as np
-from Enums import Perturbations
+from src.Enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
 from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation
-from poliastro.core.perturbations import third_body as three_body
 from astropy import units as u
-from util import PropParams
+from src.dto import PropParams
 from typing import Dict
 
 
@@ -42,7 +41,7 @@ def a_d(t0, state, k, perturbations: Dict):
     :param state: Required by poliastro
     :param k: Required by poliastro (gravitational parameter-mu)
     :param perturbations: Dictionary of perturbations desired by the user. Keys correspond to the perturbations Enum
-    class in Enum.py, while values correspond to objects in the util.py class.
+    class in Enum.py, while values correspond to objects in the dto.py class.
     :return: Returns a force that describes the impact of all desired perturbations
     """
     fun = []

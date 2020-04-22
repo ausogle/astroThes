@@ -1,8 +1,7 @@
 import math
 import numpy as np
 from numpy import linalg as la
-from typing import List
-from util import ObsParams
+from src.dto import ObsParams
 
 
 def f(rr: np.ndarray, obs_params: ObsParams) -> np.ndarray:

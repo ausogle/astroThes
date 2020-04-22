@@ -1,8 +1,8 @@
 import numpy as np
 from numpy import linalg as la
-from Ffun import f
-from propagator import propagate
-from util import ObsParams, PropParams
+from src.Ffun import f
+from src.propagator import propagate
+from src.dto import ObsParams, PropParams
 
 
 def __direction_isolator(delta: np.ndarray, i: int):
@@ -44,7 +44,7 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     return a
 
 
-def milano(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.001) -> np.ndarray:
+def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.001) -> np.ndarray:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus

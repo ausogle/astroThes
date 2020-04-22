@@ -1,8 +1,8 @@
 import numpy as np
-from core import milano
-from Enums import Perturbations, Frames
-from util import ObsParams, PropParams, J2, J3, Drag, ThirdBody
-from poliastro.bodies import Earth, Moon
+from src.core import milani
+from src.Enums import Perturbations, Frames
+from src.dto import ObsParams, PropParams, J2
+from poliastro.bodies import Earth
 from astropy.time import Time
 from astropy import units as u
 
@@ -21,5 +21,5 @@ J2 = J2(Earth.J2.value, Earth.R.to(u.km).value)
 prop_params = PropParams(dt, epoch_f)
 prop_params.add_perturbation(Perturbations.J2.value, J2)
 
-xout = milano(x, xoffset, obs_params, prop_params)
+xout = milani(x, xoffset, obs_params, prop_params)
 print(xout)
