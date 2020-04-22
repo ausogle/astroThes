@@ -1,5 +1,5 @@
 import numpy as np
-from src.Enums import Perturbations
+from src.enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth

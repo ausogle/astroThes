@@ -1,5 +1,5 @@
 import numpy as np
-from src.Ffun import f
+from src.ffun import f
 import pytest
 
 

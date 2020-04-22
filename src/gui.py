@@ -1,13 +1,13 @@
 import numpy as np
 from src.core import milani
-from src.Enums import Perturbations, Frames
+from src.enums import Perturbations, Frames
 from src.dto import ObsParams, PropParams, J2
 from poliastro.bodies import Earth
 from astropy.time import Time
 from astropy import units as u
 
 x = np.array([66666, 0, 0, 0, -1.4551, 0])
-xoffset = np.array([1000, 0, 0, 0, 0, 0])
+xoffset = np.array([1000, 300, 150, .01, .01, 0])
 
 epoch_i = Time("2018-08-17 12:05:50", scale="tdb")
 epoch_i.format = "jd"

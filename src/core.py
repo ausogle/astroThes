@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import linalg as la
-from src.Ffun import f
+from src.ffun import f
 from src.propagator import propagate
 from src.dto import ObsParams, PropParams
 
@@ -44,6 +44,25 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     return a
 
 
+def get_delta_x_from_qr_factorization(a: np.matrix, b: np.ndarray) -> np.ndarray:
+    """
+    Solves the linear equation C*deltax = d, comparable to Ax=b, using qr factorization from numpy.
+    :param a: Is actually the c matrix from milani(), named to a for analogy to equation above.
+    :param b: Is actually the d matrix from milani().
+    :return: Returns delta_x or x from analogy
+    """
+    q, r = np.linalg.qr(a.transpose())
+    x = np.matmul(q, np.matmul(np.linalg.inv(r.transpose()), b))
+    return x
+
+
+def invert_svd(a: np.matrix) -> np.matrix:
+    u, s, vh = np.linalg.svd(a)
+    d = np.diag(s)
+    ainv = np.matmul(np.matmul(vh.transpose(), np.linalg.inv(d)), u.transpose())
+    return ainv
+
+
 def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.001) -> np.ndarray:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
@@ -68,16 +87,18 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     hello = np.zeros((20, 1))
 
-    for i in range(0, 1):  # stopping criteria, should be changed to be based on deltaX
+    for i in range(0, 3):  # stopping criteria, should be changed to be based on deltaX
         hello[i] = la.norm(xi)
 
         b = -derivative(x, delta, obs_params, prop_params)
         c = np.matmul(b.transpose(), b)
         d = -np.matmul(b.transpose(), xi)
 
-        invC = la.inv(c) #cleverness required
+        # invC = la.inv(c)
+        # deltax = np.matmul(invC, d)
+        invC = invert_svd(c)
         deltax = np.matmul(invC, d)
-
+        # deltax = get_delta_x_from_qr_factorization(c, d)
         xnew = x + deltax
 
         ypred = f(propagate(xnew, prop_params), obs_params)
