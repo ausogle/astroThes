@@ -68,7 +68,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
 def direction_isolator(delta: np.ndarray, i: int):
     """
-    __direction_isolator() manipulates the delta array to return an empty array with the exc
+    direction_isolator() manipulates the delta array to return an empty array with the exc
     :param delta: Input array of step sizes for calculating derivatives around the state vector
     :param i: the element of delta desired to be preserved.
     :return: Near empty array, where the ith element is the ith element of delta.
