@@ -27,11 +27,11 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     xi = yobs - ypred
 
-    max_iter = 20
+    max_iter = 5
     delta_x = np.ones(len(x))               #Must break the stopping criteria
     hello = np.zeros((max_iter, 1))
     i = 0
-    while stopping_criteria(delta_x) and i < max_iter:
+    while not stopping_criteria(delta_x) and i < max_iter:
         hello[i] = la.norm(xi)
 
         b = -derivative(x, delta, obs_params, prop_params)
@@ -54,7 +54,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         xnew = x + delta_x
 
         ypred = f(propagate(xnew, prop_params), obs_params)
-        x = xnew
+        x = xnew - np.zeros(len(x))
         xi = yobs - ypred
 
         i = i+1
@@ -156,7 +156,9 @@ def get_delta_x_from_gauss_seidel(a: np.matrix, b: np.ndarray, max_iter=20, tol=
         x_old = x - np.zeros(n)
         i = i+1
     if i == max_iter - 1:
-        print("CAUTION: REACHED MAX ITERATIONS IN GAUSS SEIDEL METHOD")
+        print("CAUTION: REACHED MAX ITERATIONS IN GAUSS-SEIDEL METHOD")
+    b_prime = np.matmul(a, x)
+    print("Error observation in Gauss-Seidel Method\n", b.transpose(), "\n", b_prime.transpose())
     return x
 
 
