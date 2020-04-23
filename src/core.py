@@ -162,7 +162,17 @@ def get_delta_x_from_gauss_seidel(a: np.matrix, b: np.ndarray, max_iter=20, tol=
     return x
 
 
-def stopping_criteria(deltax: np.ndarray, rtol=1e-3, vtol=1e-6) -> bool:
-    r = np.linalg.norm(deltax[0:3])
-    v = np.linalg.norm(deltax[3:6])
+def stopping_criteria(delta_x: np.ndarray, rtol=1e-3, vtol=1e-6) -> bool:
+    """
+    Determines whether or not the algorithm can stop. Currently evaluates against arbitrary conditions. To fully
+    integrate rtol and vtol into code, they need to be included in one of the params objects. Tests if the position and
+    velocity are within a certain distance of the previous iteration. Assuming with each step we get closer, this
+    implies we were within the specified tolerances supplied, or assumed above.
+    :param delta_x: difference in state vector from previous interation
+    :param rtol: tolerance on change in position [km]
+    :param vtol: tolerance on change in velocity [km/s]
+    :return: returns if change is within tolerance
+    """
+    r = np.linalg.norm(delta_x[0:3])
+    v = np.linalg.norm(delta_x[3:6])
     return r < rtol and v < vtol
