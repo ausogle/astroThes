@@ -1,14 +1,15 @@
 from src import core
-from src.core import __direction_isolator, derivative, get_delta_x_from_qr_factorization, invert_svd
+from src.core import *
 import mockito
 from mockito import when, patch
+import pytest
 import numpy as np
 
 
 def test_direction_isolator():
     delta = np.array([1, 2, 3, 4, 5, 6])
     j = 2
-    experimental = __direction_isolator(delta, j)
+    experimental = direction_isolator(delta, j)
     theoretical = np.array([0, 0, 3, 0, 0, 0])
     assert np.array_equal(theoretical, experimental)
 
@@ -48,7 +49,6 @@ def test_derivative():
         assert np.array_equal(theoretical, experimental)
 
 
-
 def test_qr_factorization():
     a = np.array([[1, 0, 2], [2, 5, 5], [3, 1, 3]])
     ainv = np.linalg.inv(a)
@@ -63,6 +63,25 @@ def test_invert_svd():
     ainv = np.linalg.inv(a)
     asvd = invert_svd(a)
     assert np.allclose(ainv, asvd)
+
+
+def test_gauss_seidel():
+    a = np.array([[4, 1, 2], [3, 5, 1], [1, 1, 3]])
+    ainv = np.linalg.inv(a)
+    b = np.array([[4], [7], [3]])
+    x = np.matmul(ainv, b)
+    xgs = get_delta_x_from_gauss_seidel(a, b)
+    result = np.zeros((len(b), 1))
+    for i in range (0, len(b)):
+        result[i] = xgs[i]
+    assert np.allclose(x, result)
+
+
+@pytest.mark.parametrize("delta_x, rtol, vtol, expected", [(np.array([1, 2, 3, 4, 5, 6]), 10, 10, True),
+                                                           (np.array([1, 2, 3, 4, 5, 6]), 1, 1, False)])
+def test_stopping_criteria_pass(delta_x, rtol, vtol, expected):
+    result = stopping_criteria(delta_x, rtol=rtol,  vtol=vtol)
+    assert result == expected
 
 
 def xcompare(a, b):

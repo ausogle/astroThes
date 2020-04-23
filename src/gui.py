@@ -5,6 +5,7 @@ from src.dto import ObsParams, PropParams, J2
 from poliastro.bodies import Earth
 from astropy.time import Time
 from astropy import units as u
+from ffun import f
 
 x = np.array([66666, 0, 0, 0, -1.4551, 0])
 xoffset = np.array([1000, 300, 150, .01, .01, 0])
@@ -22,4 +23,10 @@ prop_params = PropParams(dt, epoch_f)
 prop_params.add_perturbation(Perturbations.J2.value, J2)
 
 xout = milani(x, xoffset, obs_params, prop_params)
-print(xout)
+
+
+r = xout[0:3]
+v = xout[3:6]
+print("position: ", r, "\nvelocity: ", v)
+print("\nDifference in observational values of x and xout")
+print(f(x, obs_params), f(xout, obs_params))
