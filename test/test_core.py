@@ -79,7 +79,7 @@ def test_gauss_seidel():
 
 @pytest.mark.parametrize("delta_x, rtol, vtol, expected", [(np.array([1, 2, 3, 4, 5, 6]), 10, 10, True),
                                                            (np.array([1, 2, 3, 4, 5, 6]), 1, 1, False)])
-def test_stopping_criteria_pass(delta_x, rtol, vtol, expected):
+def test_stopping_criteria(delta_x, rtol, vtol, expected):
     result = stopping_criteria(delta_x, rtol=rtol,  vtol=vtol)
     assert result == expected
 
