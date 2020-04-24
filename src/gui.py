@@ -5,7 +5,7 @@ from src.dto import ObsParams, PropParams, J2
 from poliastro.bodies import Earth
 from astropy.time import Time
 from astropy import units as u
-from ffun import f
+from src.ffun import f
 
 x = np.array([66666, 0, 0, 0, -1.4551, 0])
 xoffset = np.array([1000, 300, 150, .01, .01, 0])
