@@ -1,15 +1,14 @@
 import numpy as np
-from propagator import a_d
+from src.propagator import a_d
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
-from poliastro.bodies import Earth, Moon
-from poliastro.core.perturbations import J2_perturbation, J3_perturbation, atmospheric_drag, third_body
+from poliastro.bodies import Earth
+from poliastro.core.perturbations import J2_perturbation, J3_perturbation, atmospheric_drag
 # from poliastro.ephem import build_ephem_interpolant
 # from astropy.coordinates import solar_system_ephemeris
 from astropy import units as u
 from astropy.time import Time
-import util
-import mockito
+from src import dto
 
 
 def test_propagate_with_j2j3():
@@ -19,9 +18,9 @@ def test_propagate_with_j2j3():
     v = x[3:6] * u.km / u.s
     epoch = Time(2454283.0, format="jd", scale="tdb")
 
-    J2 = util.J2(Earth.J2.value, Earth.R.to(u.km).value)
-    J3 = util.J3(Earth.J3.value, Earth.R.to(u.km).value)
-    prop_params = util.PropParams(1, epoch)
+    J2 = dto.J2(Earth.J2.value, Earth.R.to(u.km).value)
+    J3 = dto.J3(Earth.J3.value, Earth.R.to(u.km).value)
+    prop_params = dto.PropParams(1, epoch)
     prop_params.add_perturbation("J2", J2)
     prop_params.add_perturbation("J3", J3)
 
@@ -31,7 +30,7 @@ def test_propagate_with_j2j3():
     output_f = np.concatenate([sat_f.r.value, sat_f.v.value])
     sat_custom = sat_i.propagate(dt * u.s, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
     output_custom = np.concatenate([sat_custom.r.value, sat_custom.v.value])
-    assert xcompare(output_custom, output_f)
+    assert np.array_equal(output_custom, output_f)
 
 
 def test_propagate_with_drag():
@@ -45,8 +44,8 @@ def test_propagate_with_drag():
     m = 1000
     H0 = 100
     rho0 = 1000
-    Drag = util.Drag(Earth.R.to(u.km).value, C_D, A, m, H0, rho0)
-    prop_params = util.PropParams(1, epoch)
+    Drag = dto.Drag(Earth.R.to(u.km).value, C_D, A, m, H0, rho0)
+    prop_params = dto.PropParams(1, epoch)
     prop_params.add_perturbation("Drag", Drag)
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
@@ -55,7 +54,7 @@ def test_propagate_with_drag():
     output_f = np.concatenate([sat_f.r.value, sat_f.v.value])
     sat_custom = sat_i.propagate(dt * u.s, method=cowell, ad=a_d, perturbations=prop_params.perturbations)
     output_custom = np.concatenate([sat_custom.r.value, sat_custom.v.value])
-    assert xcompare(output_custom, output_f)
+    assert np.array_equal(output_custom, output_f)
 
 
 def test_ad_equals_none():
@@ -69,7 +68,7 @@ def test_ad_equals_none():
     sat_poli = sat_i.propagate(t * u.s, method=cowell)
     theoretical = sat_custom.r.value
     experimental = sat_poli.r.value
-    assert xcompare(theoretical, experimental)
+    assert np.array_equal(theoretical, experimental)
 
 
 def a_d_j2j3(t0, state, k, J2, J3, R):
@@ -78,10 +77,4 @@ def a_d_j2j3(t0, state, k, J2, J3, R):
 
 def a_d_nothing(t0, state, k):
     return atmospheric_drag(t0, state, k, Earth.R.to(u.km).value, 0, 0, 1, 1, 0)
-
-
-def xcompare(a, b):
-    if isinstance(a, mockito.matchers.Matcher):
-        return a.matches(b)
-    return np.array_equal(a, b)
 
