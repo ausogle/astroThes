@@ -67,6 +67,20 @@ class ThirdBody:
         self.third_body = third_body
 
 
+class SRP:
+    """
+    Object intended to include all values require by poliastro/core/perturbation.py radiation_pressure().
+    A_over_m is the new implementation. May lead to issues.
+    """
+    def __init__(self, R, C_R, A, m, Wdivc_s, star):
+        self.R = R
+        self.C_R = C_R
+        self.A = A
+        self.m = m
+        self.Wdivc_s = Wdivc_s
+        self.star = star
+
+
 # def rv_to_oe(rr, vv):
 #     a = __get_a(rr, vv)
 #     e = __get_e(rr, vv)

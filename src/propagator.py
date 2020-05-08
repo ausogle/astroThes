@@ -3,7 +3,7 @@ from src.enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
-from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation
+from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation, radiation_pressure
 from astropy import units as u
 from src.dto import PropParams
 from typing import Dict
@@ -55,6 +55,10 @@ def a_d(t0, state, k, perturbations: Dict):
     if Perturbations.J3.value in perturbations:
         perturbation = perturbations.get(Perturbations.J3.value)
         fun.append(J3_perturbation(t0, state, k, perturbation.J3, perturbation.R))
+    if Perturbations.SRP.value in perturbations:
+        perturbation = perturbations.get(Perturbations.SRP.value)
+        fun.append(radiation_pressure(t0, state, k, perturbation.R, perturbation.C_R, perturbation.A, perturbation.m,
+                                      perturbation.Wdivc_s, perturbation.star))
     # if "Moon" in perturbations:
     #     perturbation = perturbations.get("Moon")
     #     fun.append(three_body(t0, state, k, perturbation.k_third, perturbation.third_body))
