@@ -3,15 +3,11 @@ from src.enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
-from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation, radiation_pressure
+from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation, radiation_pressure, \
+    third_body
 from astropy import units as u
 from src.dto import PropParams
 from typing import Dict
-
-
-# from poliastro.ephem import build_ephem_interpolant
-# from astropy.coordinates import solar_system_ephemeris
-# Need to make the third body values here
 
 
 def propagate(x: np.ndarray, params: PropParams) -> np.ndarray:
@@ -59,16 +55,12 @@ def a_d(t0, state, k, perturbations: Dict):
         perturbation = perturbations.get(Perturbations.SRP.value)
         fun.append(radiation_pressure(t0, state, k, perturbation.R, perturbation.C_R, perturbation.A, perturbation.m,
                                       perturbation.Wdivc_s, perturbation.star))
-    # if "Moon" in perturbations:
-    #     perturbation = perturbations.get("Moon")
-    #     fun.append(three_body(t0, state, k, perturbation.k_third, perturbation.third_body))
-    # Need to create these objects in this method
-    # epoch = Time(2454283.0, format="jd", scale="tdb")
-    # solar_system_ephemeris.set("de432s")
-    # body_moon = build_ephem_interpolant(Moon, 28 * u.day, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
-    #                                     rtol=1e-2)
-    # moon = ThirdBody(Moon.k.to(u.km ** 3 / u.s ** 2).value, body_moon)
-    # prop_params.add_perturbation("Moon", moon)
+    if Perturbations.Moon.value in perturbations:
+        perturbation = perturbations.get(Perturbations.Moon.value)
+        fun.append(third_body(t0, state, k, perturbation.k_third, perturbation.third_body))
+    if Perturbations.Sun.value in perturbations:
+        perturbation = perturbations.get(Perturbations.Sun.value)
+        fun.append(third_body(t0, state, k, perturbation.k_third, perturbation.third_body))
 
     # To add additional, or improvements upon existing perturbations, everything must be included in this function.
 
