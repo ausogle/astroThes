@@ -35,16 +35,16 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         hello[i] = la.norm(xi)
 
         b = -derivative(x, delta, obs_params, prop_params)
-        c = np.matmul(b.transpose(), b)
-        d = -np.matmul(b.transpose(), xi)
+        c = b.transpose() @ b
+        d = -b.transpose() @ xi
 
         # Built in inv() doesnt work
         # invC = la.inv(c)
-        # deltax = np.matmul(invC, d)
+        # deltax = invC @ d
 
         # Tried using np.linalg.svd() Alas still doesnt work
         # invC = invert_svd(c)
-        # deltax = np.matmul(invC, d)
+        # deltax = invC @ d
 
         # Tried using np.linalg.qr() Also deosn't work
         # deltax = get_delta_x_from_qr_factorization(c, d)
@@ -75,7 +75,7 @@ def direction_isolator(delta: np.ndarray, i: int):
     """
     m = np.zeros((6, 6))
     m[i][i] = 1
-    return np.matmul(m, delta)
+    return m @ delta
 
 
 def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_params: PropParams, n=2) -> np.matrix:
@@ -113,7 +113,7 @@ def get_delta_x_from_qr_factorization(a: np.matrix, b: np.ndarray) -> np.ndarray
     :return: Returns delta_x or x from analogy
     """
     q, r = np.linalg.qr(a.transpose())
-    x = np.matmul(q, np.matmul(np.linalg.inv(r.transpose()), b))
+    x = q @ np.linalg.inv(r.transpose()) @ b
     return x
 
 
@@ -125,7 +125,7 @@ def invert_svd(a: np.matrix) -> np.matrix:
     """
     u, s, vh = np.linalg.svd(a)
     d = np.diag(s)
-    ainv = np.matmul(np.matmul(vh.transpose(), np.linalg.inv(d)), u.transpose())
+    ainv = vh.transpose() @ np.linalg.inv(d) @ u.transpose()
     return ainv
 
 
@@ -157,7 +157,7 @@ def get_delta_x_from_gauss_seidel(a: np.matrix, b: np.ndarray, max_iter=20, tol=
         i = i+1
     if i == max_iter - 1:
         print("CAUTION: REACHED MAX ITERATIONS IN GAUSS-SEIDEL METHOD")
-    b_prime = np.matmul(a, x)
+    b_prime = a @ x
     print("Error observation in Gauss-Seidel Method\n", b.transpose(), "\n", b_prime.transpose())
     return x
 
