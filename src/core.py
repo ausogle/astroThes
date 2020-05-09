@@ -53,6 +53,11 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         delta_x = get_delta_x_from_gauss_seidel(c, d)
         xnew = x + delta_x
 
+        # Tried using cholesky decomposition
+        # invC = invert_using_cholesky(c)
+        # delta_x = invC @ d
+        # xnew = x + delta_x
+
         ypred = f(propagate(xnew, prop_params), obs_params)
         x = xnew - np.zeros(len(x))
         xi = yobs - ypred
@@ -103,6 +108,12 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
             a[i][j] = temp3[i]
 
     return a
+
+
+# def invert_using_cholesky(a: np.matrix) -> np.matrix:
+#     l = np.linalg.cholesky(a)
+#     invl = np.linalg.inv(l)
+#     return invl.T@invl
 
 
 def get_delta_x_from_qr_factorization(a: np.matrix, b: np.ndarray) -> np.ndarray:
