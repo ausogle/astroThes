@@ -8,7 +8,7 @@ from astropy import units as u
 from src.ffun import f
 
 x = np.array([66666, 0, 0, 0, -1.4551, 0])
-xoffset = np.array([1000, 300, 150, .01, .01, 0])
+xoffset = np.array([0, 0, 6000, .1, .10, .0])
 
 epoch_i = Time("2018-08-17 12:05:50", scale="tdb")
 epoch_i.format = "jd"
