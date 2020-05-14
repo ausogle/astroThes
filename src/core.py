@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import linalg as la
-import scipy as sp
 from src.ffun import f
 from src.propagator import propagate
 from src.dto import ObsParams, PropParams
@@ -38,30 +37,12 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         b = -derivative(x, delta, obs_params, prop_params)
         c = b.transpose() @ b
         d = -b.transpose() @ xi
-        # Built in inv() doesnt work
-        # invC = la.inv(c)
-        # deltax = invC @ d
 
-        # Tried using np.linalg.svd() still doesnt work
-        # invC = invert_svd(c)
-        # deltax = invC @ d
-
-        # Tried using np.linalg.qr() Also deosn't work
-        # deltax = get_delta_x_from_qr_factorization(c, d)
-
-        # Tried using gauss-seidel approach to solve system of equations C * delta_x = d
-        # delta_x = get_delta_x_from_gauss_seidel(c, d)
-        # xnew = x + delta_x
 
         # Tried inverting using lu factorization
         invC = invert_using_lu(c)
         delta_x = invC @ d
         xnew = x + delta_x
-
-        # Tried using cholesky decomposition
-        # invC = invert_using_cholesky(c)
-        # delta_x = invC @ d
-        # xnew = x + delta_x
 
         ypred = f(propagate(xnew, prop_params), obs_params)
         x = xnew - np.zeros(len(x))
@@ -112,69 +93,6 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
             a[i][j] = temp3[i]
 
     return a
-
-
-# def invert_using_cholesky(a: np.matrix) -> np.matrix:
-#     l = np.linalg.cholesky(a)
-#     invl = np.linalg.inv(l)
-#     return invl.T@invl
-
-
-def get_delta_x_from_qr_factorization(a: np.matrix, b: np.ndarray) -> np.ndarray:
-    """
-    Solves the linear equation C*deltax = d, comparable to Ax=b, using qr factorization from numpy.
-    :param a: Is actually the c matrix from milani(), named to a for analogy to equation above.
-    :param b: Is actually the d matrix from milani().
-    :return: Returns delta_x or x from analogy
-    """
-    q, r = np.linalg.qr(a.transpose())
-    x = q @ np.linalg.inv(r.transpose()) @ b
-    return x
-
-
-def invert_svd(a: np.matrix) -> np.matrix:
-    """
-    Inverts a matrix using singular value decomposition function in numpy
-    :param a: matrix that needs to be inverted
-    :return: multiplicative inverse of a
-    """
-    u, s, vh = np.linalg.svd(a)
-    d = np.diag(s)
-    ainv = vh.transpose() @ np.linalg.inv(d) @ u.transpose()
-    return ainv
-
-
-def get_delta_x_from_gauss_seidel(a: np.matrix, b: np.ndarray, max_iter=20, tol=1e-16) -> np.ndarray:
-    """
-    Gauss-Seidel approach to solve the linear system of equations Ax = b. In our specific case this is C*delta_x = d.
-    Divergence is not uncommon from testing.
-    :param a: c matrix from milani()
-    :param b: d matrix from minlani()
-    :param max_iter: maximum number of iterations acceptable
-    :param tol: maximum tolerance for a single update for every element
-    :return: returns delta_x
-    """
-    n = len(a)
-    x = np.zeros(n)
-    x_old = np.zeros(n)
-    i = 0
-    error = tol*2
-    while i < max_iter and error > tol:
-        for j in range(0, n):
-            d = b[j]
-            for k in range(0, n):
-                if j != k:
-                    d = d - a[j][k] * x[k]
-            x[j] = d/a[j][j]
-        delta_x = x - x_old
-        error = max(abs(delta_x))
-        x_old = x - np.zeros(n)
-        i = i+1
-    if i == max_iter - 1:
-        print("CAUTION: REACHED MAX ITERATIONS IN GAUSS-SEIDEL METHOD")
-    b_prime = a @ x
-    print("Error observation in Gauss-Seidel Method\n", b.transpose(), "\n", b_prime.transpose())
-    return x
 
 
 def invert_using_lu(a: np.matrix) -> np.matrix:
