@@ -49,6 +49,13 @@ def test_derivative():
         assert np.array_equal(theoretical, experimental)
 
 
+def test_invert_lu():
+    a = np.array([[1, 0, 2], [2, 5, 5], [3, 1, 3]])
+    ainv = np.linalg.inv(a)
+    asvd = invert_using_lu(a)
+    assert np.allclose(ainv, asvd)
+
+
 @pytest.mark.parametrize("delta_x, rtol, vtol, expected", [(np.array([1, 2, 3, 4, 5, 6]), 10, 10, True),
                                                            (np.array([1, 2, 3, 4, 5, 6]), 1, 1, False)])
 def test_stopping_criteria(delta_x, rtol, vtol, expected):

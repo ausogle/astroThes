@@ -35,13 +35,11 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         hello[i] = la.norm(xi)
 
         b = -derivative(x, delta, obs_params, prop_params)
-        c = b.transpose() @ b
-        d = -b.transpose() @ xi
+        c = b.T @ b
+        d = -b.T @ xi
 
-
-        # Tried inverting using lu factorization
-        invC = invert_using_lu(c)
-        delta_x = invC @ d
+        inv_c = invert_using_lu(c)
+        delta_x = inv_c @ d
         xnew = x + delta_x
 
         ypred = f(propagate(xnew, prop_params), obs_params)
@@ -52,7 +50,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         if i == max_iter - 1:
             print("CAUTION: REACHED MAX ITERATIONS IN MILANI METHOD")
 
-    print("The norm of the residuals has been", hello[0:i].transpose())
+    print("The norm of the residuals has been", hello[0:i].T)
     print("\nThe main iteration sequence ran ", i, " times\n")
     return xnew
 
@@ -96,6 +94,10 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
 
 
 def invert_using_lu(a: np.matrix) -> np.matrix:
+    """
+    Inverts a matrix using the numpy.linalg.lu factorization.
+    :param a: Matrix desired to be inverted. Will be the c matrix.
+    """
     p, l, u = la.lu(a)
     invu = la.inv(u)
     invl = la.inv(l)
