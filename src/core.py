@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import linalg as la
+from scipy import linalg as la
 import scipy as sp
 from src.ffun import f
 from src.propagator import propagate
@@ -28,7 +28,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     xi = yobs - ypred
 
-    max_iter = 5
+    max_iter = 4
     delta_x = np.ones(len(x))               #Must break the stopping criteria
     hello = np.zeros((max_iter, 1))
     i = 0
@@ -53,8 +53,8 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         # delta_x = get_delta_x_from_gauss_seidel(c, d)
         # xnew = x + delta_x
 
-        # Tried inverting using ldl (scipy)
-        invC = invert_using_ldl(c)
+        # Tried inverting using lu factorization
+        invC = invert_using_lu(c)
         delta_x = invC @ d
         xnew = x + delta_x
 
@@ -104,7 +104,6 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
 
     a = np.zeros((n, m))
     for j in range(0, m):
-        x1 = x + direction_isolator(delta, j)
         temp1 = propagate(x + direction_isolator(delta, j), prop_params)
         temp2 = propagate(x - direction_isolator(delta, j), prop_params)
         temp3 = (f(temp1, obs_params) - f(temp2, obs_params)) / (2 * delta[j])
@@ -178,21 +177,11 @@ def get_delta_x_from_gauss_seidel(a: np.matrix, b: np.ndarray, max_iter=20, tol=
     return x
 
 
-def invert_using_ldl(a: np.matrix) -> np.matrix:
-    lu, d, perm = sp.linalg.ldl(a, lower=0)
-    invlu = np.linalg.inv(lu)
-    invd = invert_diag(d)
-    invlut = np.linalg.inv(lu.T)
-    inva = invlut @ invd @ invlu
-    return inva
-
-
-def invert_diag(d: np.matrix) -> np.matrix:
-    n = d.shape[1]
-    for i in range(0, n):
-        if d[i][i] > 1e-14:
-            d[i][i] = 1 / d[i][i]
-    return d
+def invert_using_lu(a: np.matrix) -> np.matrix:
+    p, l, u = la.lu(a)
+    invu = la.inv(u)
+    invl = la.inv(l)
+    return la.inv(u) @ la.inv(l) @ p.T
 
 
 def stopping_criteria(delta_x: np.ndarray, rtol=1e-3, vtol=1e-6) -> bool:
