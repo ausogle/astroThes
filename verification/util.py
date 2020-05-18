@@ -4,6 +4,9 @@ mu = np.float64(398600.4418)    # gravitational constant of the Earth km^3/s^2
 
 
 def generate_earth_surface():
+    """
+    Generates x,y,z coordinates for a perfect sphere representing the Earth. To be used in plot_surface()
+    """
     r = 6378
     u = np.linspace(0, 2 * np.pi, 50)
     v = np.linspace(0, np.pi, 50)
@@ -14,6 +17,9 @@ def generate_earth_surface():
 
 
 def get_a(x):
+    """
+    Returns semi-major axis of an orbit given the state x = [r v]
+    """
     rr = x[0:3]
     vv = x[3:6]
     v = np.linalg.norm(vv)
@@ -24,12 +30,18 @@ def get_a(x):
 
 
 def get_period(x):
+    """
+    Returns the period of an orbit given the state x = [r v]
+    """
     a = get_a(x)
     t = 2*np.pi*math.sqrt(a*a*a/mu)
     return t
 
 
 def get_e(x):
+    """
+    Returns the eccentricity of an orbit given the state x = [r v]
+    """
     rr = x[0:3]
     vv = x[3:6]
     r = np.linalg.norm(rr)
