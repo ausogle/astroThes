@@ -27,7 +27,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     xi = yobs - ypred
 
-    max_iter = 4
+    max_iter = 5
     delta_x = np.ones(len(x))               #Must break the stopping criteria
     hello = np.zeros((max_iter, 1))
     i = 0
@@ -37,6 +37,10 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         b = -derivative(x, delta, obs_params, prop_params)
         c = b.T @ b
         d = -b.T @ xi
+
+        print("\n\nNew test section. i =", i)
+        print("Eigenvalues of c", la.eig(c))
+        print("Rank of C", np.linalg.matrix_rank(c))
 
         inv_c = invert_using_lu(c)
         delta_x = inv_c @ d
@@ -85,6 +89,8 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     for j in range(0, m):
         temp1 = propagate(x + direction_isolator(delta, j), prop_params)
         temp2 = propagate(x - direction_isolator(delta, j), prop_params)
+        temp4 = f(temp1, obs_params)
+        temp5 = f(temp2, obs_params)
         temp3 = (f(temp1, obs_params) - f(temp2, obs_params)) / (2 * delta[j])
 
         for i in range(0, n):

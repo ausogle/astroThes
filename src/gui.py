@@ -12,7 +12,7 @@ xoffset = np.array([100, 50, 10, .01, .01, .03])
 
 epoch_i = Time("2018-08-17 12:05:50", scale="tdb")
 epoch_i.format = "jd"
-epoch_f = epoch_i + 1.804e3 * u.day
+epoch_f = epoch_i + 1.804e5 * u.day
 dt = (epoch_f - epoch_i).value
 obs_loc = ["lat", "lon", "alt"]
 obs_frame = Frames.ECEF.value
