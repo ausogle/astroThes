@@ -3,6 +3,8 @@ from scipy import linalg as la
 from src.ffun import f
 from src.propagator import propagate
 from src.dto import ObsParams, PropParams
+from scipy.linalg.lapack import dtrtrs, dgbsv
+from scipy.linalg import solve_banded
 
 
 def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
@@ -27,7 +29,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     xi = yobs - ypred
 
-    max_iter = 3
+    max_iter = 7
     delta_x = np.ones(len(x))               #Must break the stopping criteria
     hello = np.zeros((max_iter+1, 1))
     hello[0] = la.norm(xi)
@@ -103,16 +105,49 @@ def invert_using_lu(a: np.matrix) -> np.matrix:
     return la.inv(u) @ la.inv(l) @ p.T
 
 
-def get_delta_x(a,b):
-    p, l, u = la.lu(a)
-    invl = la.inv(l)
-    x_triag = la.solve_triangular(u, invl @ p.T @ b)
-    residual_triag = a @ x_triag - b
-    print(residual_triag)
+def get_delta_x(a, b):
+    # p, l, u = la.lu(a)
+    # invl = la.inv(l)
+    # x_triag = la.solve_triangular(u, invl @ p.T @ b)
+    # residual_triag = a @ x_triag - b
+    # print(residual_triag)
 
     # x_orig = la.inv(u) @ la.inv(l) @ p.T @ b
     # residual_orig = a@x_orig-b
-    return x_triag
+
+    # x = dtrtrs(u, la.inv(l) @ p.T @ b, lower=False)[0]
+    # residual = a@x-b
+    upper = 5
+    lower = 5
+    ab = diagonal_form(a, upper=upper, lower=lower)
+    x = solve_banded((upper, lower), ab, b)
+    residual = a@x-b
+
+    print("\nresidual")
+    print(residual)
+    return x
+
+
+def diagonal_form(a, upper=1, lower=1):
+    """
+    """
+    n = a.shape[1]
+    # assert(np.all(a.shape==(n,n)))
+    ab = np.zeros((2*n-1, n))
+    for i in range(n):
+        ab[i, (n-1)-i:] = np.diagonal(a, (n-1)-i)
+
+    for i in range(n-1):
+        ab[(2*n-2)-i, :i+1] = np.diagonal(a, i-(n-1))
+    mid_row_inx = int(ab.shape[0]/2)
+    upper_rows = [mid_row_inx - i for i in range(1, upper+1)]
+    upper_rows.reverse()
+    upper_rows.append(mid_row_inx)
+    lower_rows = [mid_row_inx + i for i in range(1, lower+1)]
+    keep_rows = upper_rows + lower_rows
+    ab = ab[keep_rows, :]
+    return ab
+
 
 
 def stopping_criteria(delta_x: np.ndarray, rtol=1e-2, vtol=1e-5) -> bool:
