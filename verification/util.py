@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from src.dto import PropParams
+from src.propagator import propagate
 mu = np.float64(398600.4418)    # gravitational constant of the Earth km^3/s^2
 
 
@@ -49,3 +51,14 @@ def get_e(x):
     ee = np.cross(vv/mu, hh) - (rr/r)
     e = np.linalg.norm(ee)
     return e
+
+
+def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
+    t = np.arange(0, tf, dt)
+    r = np.zeros((len(t), 3))
+    prop_params = PropParams(dt, epoch)
+    for i in range(0, len(t)):
+        r[i] = x[0:3]
+        x = propagate(x, prop_params)
+        prop_params.epoch = prop_params.epoch + prop_params.dt
+    return r

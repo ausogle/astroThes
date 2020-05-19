@@ -49,18 +49,39 @@ def test_derivative():
         assert np.array_equal(theoretical, experimental)
 
 
-def test_invert_lu():
-    a = np.array([[1, 0, 2], [2, 5, 5], [3, 1, 3]])
-    ainv = np.linalg.inv(a)
-    asvd = invert_using_lu(a)
-    assert np.allclose(ainv, asvd)
-
-
 @pytest.mark.parametrize("delta_x, rtol, vtol, expected", [(np.array([1, 2, 3, 4, 5, 6]), 10, 10, True),
                                                            (np.array([1, 2, 3, 4, 5, 6]), 1, 1, False)])
 def test_stopping_criteria(delta_x, rtol, vtol, expected):
     result = stopping_criteria(delta_x, rtol=rtol,  vtol=vtol)
     assert result == expected
+
+
+def test_diagonal_form():
+    a = np.array([[5, 2, -1, 0, 0],
+                  [1, 4, 2, -1, 0],
+                  [0, 1, 3, 2, -1],
+                  [0, 0, 1, 2, 2],
+                  [0, 0, 0, 1, 1]])
+    b = np.array([0, 1, 2, 2, 3])
+    ab = diagonal_form(a, upper=2, lower=1)
+    expected = np.array([[0, 0, -1, -1, -1],
+                         [0, 2, 2, 2, 2],
+                         [5, 4, 3, 2, 1],
+                         [1, 1, 1, 1, 0]])
+    assert np.allclose(ab, expected)
+
+
+def test_get_delta_x():
+    a = np.array([[5, 2, -1, 0, 0],
+                  [1, 4, 2, -1, 0],
+                  [0, 1, 3, 2, -1],
+                  [0, 0, 1, 2, 2],
+                  [0, 0, 0, 1, 1]])
+    b = np.array([0, 1, 2, 2, 3])
+    ab = diagonal_form(a, upper=2, lower=1)
+    x = solve_banded((1, 2), ab, b)
+    residual = a @ x - b
+    assert np.allclose(residual, np.zeros((6, 1)))
 
 
 def xcompare(a, b):

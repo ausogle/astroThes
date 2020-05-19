@@ -3,7 +3,6 @@ from scipy import linalg as la
 from src.ffun import f
 from src.propagator import propagate
 from src.dto import ObsParams, PropParams
-from scipy.linalg.lapack import dtrtrs, dgbsv
 from scipy.linalg import solve_banded
 
 
@@ -29,7 +28,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     xi = yobs - ypred
 
-    max_iter = 7
+    max_iter = 15
     delta_x = np.ones(len(x))               #Must break the stopping criteria
     hello = np.zeros((max_iter+1, 1))
     hello[0] = la.norm(xi)
@@ -38,9 +37,6 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         b = -derivative(x, delta, obs_params, prop_params)
         c = b.T @ b
         d = -b.T @ xi
-
-        # inv_c = invert_using_lu(c)
-        # delta_x = inv_c @ d
         delta_x = get_delta_x(c, d)
         xnew = x + delta_x
 
@@ -52,6 +48,8 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         hello[i] = la.norm(xi)
         if i == max_iter - 1:
             print("CAUTION: REACHED MAX ITERATIONS IN MILANI METHOD")
+    print("hello")
+    print(hello)
     return xnew
 
 
@@ -95,44 +93,31 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     return a
 
 
-def invert_using_lu(a: np.matrix) -> np.matrix:
+def get_delta_x(a: np.matrix, b: np.ndarray) -> np.ndarray:
     """
-    Inverts a matrix using the numpy.linalg.lu factorization.
-    :param a: Matrix desired to be inverted. Will be the c matrix.
+    Solves the system of equation using the scipy wrapper for LAPACK's dgbsv function.
+    Requires converting a into ab matrix. Notably, for our system the upper and lower bandwidths are both 5.
+    :param a: A matrix in normal equation. For our problem this is C
+    :param b: b vector in normal equation. For our problem this is D
     """
-    p, l, u = la.lu(a)
-    invu = la.inv(u)
-    return la.inv(u) @ la.inv(l) @ p.T
-
-
-def get_delta_x(a, b):
-    # p, l, u = la.lu(a)
-    # invl = la.inv(l)
-    # x_triag = la.solve_triangular(u, invl @ p.T @ b)
-    # residual_triag = a @ x_triag - b
-    # print(residual_triag)
-
-    # x_orig = la.inv(u) @ la.inv(l) @ p.T @ b
-    # residual_orig = a@x_orig-b
-
-    # x = dtrtrs(u, la.inv(l) @ p.T @ b, lower=False)[0]
-    # residual = a@x-b
     upper = 5
     lower = 5
     ab = diagonal_form(a, upper=upper, lower=lower)
     x = solve_banded((upper, lower), ab, b)
     residual = a@x-b
-
-    print("\nresidual")
-    print(residual)
     return x
 
 
-def diagonal_form(a, upper=1, lower=1):
+def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     """
+    Ripped from github.com/scipy/scipy/issues/8362. User Khalilsqu wrote the following function.
+    Converts a into ab given upper and lower bandwidths.
+    Follows notes at people.sc.kuleuven.be/~raf.vanderbril/homepage/publications/papers_html/fr_lev/node16.html
+    :param a: A matrix in normal equation. For our problem this is C
+    :param upper: Upper bandwidth of a
+    :param lower: Lower bandwidth of a
     """
     n = a.shape[1]
-    # assert(np.all(a.shape==(n,n)))
     ab = np.zeros((2*n-1, n))
     for i in range(n):
         ab[i, (n-1)-i:] = np.diagonal(a, (n-1)-i)
@@ -147,7 +132,6 @@ def diagonal_form(a, upper=1, lower=1):
     keep_rows = upper_rows + lower_rows
     ab = ab[keep_rows, :]
     return ab
-
 
 
 def stopping_criteria(delta_x: np.ndarray, rtol=1e-2, vtol=1e-5) -> bool:

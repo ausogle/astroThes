@@ -28,3 +28,5 @@ print("The outcome of our algorithm is \nposition: ", xout[0:3], "\nvelocity: ",
 print("\nCompared to the original \nposition: ", x[0:3], "\nvelocity:", x[3:6])
 print("\nDifference in observational values of x and xout")
 print(f(x, obs_params), f(xout, obs_params))
+
+
