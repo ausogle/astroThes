@@ -5,7 +5,7 @@ from src.propagator import propagate
 from src.dto import ObsParams, PropParams
 
 
-def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.001) -> np.ndarray:
+def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
@@ -27,23 +27,19 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     xi = yobs - ypred
 
-    max_iter = 5
+    max_iter = 3
     delta_x = np.ones(len(x))               #Must break the stopping criteria
-    hello = np.zeros((max_iter, 1))
+    hello = np.zeros((max_iter+1, 1))
+    hello[0] = la.norm(xi)
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
-        hello[i] = la.norm(xi)
-
         b = -derivative(x, delta, obs_params, prop_params)
         c = b.T @ b
         d = -b.T @ xi
 
-        print("\n\nNew test section. i =", i)
-        print("Eigenvalues of c", la.eig(c))
-        print("Rank of C", np.linalg.matrix_rank(c))
-
-        inv_c = invert_using_lu(c)
-        delta_x = inv_c @ d
+        # inv_c = invert_using_lu(c)
+        # delta_x = inv_c @ d
+        delta_x = get_delta_x(c, d)
         xnew = x + delta_x
 
         ypred = f(propagate(xnew, prop_params), obs_params)
@@ -51,11 +47,9 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         xi = yobs - ypred
 
         i = i+1
+        hello[i] = la.norm(xi)
         if i == max_iter - 1:
             print("CAUTION: REACHED MAX ITERATIONS IN MILANI METHOD")
-
-    print("The norm of the residuals has been", hello[0:i].T)
-    print("\nThe main iteration sequence ran ", i, " times\n")
     return xnew
 
 
@@ -106,11 +100,22 @@ def invert_using_lu(a: np.matrix) -> np.matrix:
     """
     p, l, u = la.lu(a)
     invu = la.inv(u)
-    invl = la.inv(l)
     return la.inv(u) @ la.inv(l) @ p.T
 
 
-def stopping_criteria(delta_x: np.ndarray, rtol=1e-3, vtol=1e-6) -> bool:
+def get_delta_x(a,b):
+    p, l, u = la.lu(a)
+    invl = la.inv(l)
+    x_triag = la.solve_triangular(u, invl @ p.T @ b)
+    residual_triag = a @ x_triag - b
+    print(residual_triag)
+
+    # x_orig = la.inv(u) @ la.inv(l) @ p.T @ b
+    # residual_orig = a@x_orig-b
+    return x_triag
+
+
+def stopping_criteria(delta_x: np.ndarray, rtol=1e-2, vtol=1e-5) -> bool:
     """
     Determines whether or not the algorithm can stop. Currently evaluates against arbitrary conditions. To fully
     integrate rtol and vtol into code, they need to be included in one of the params objects. Tests if the position and
