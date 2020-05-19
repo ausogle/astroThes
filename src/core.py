@@ -6,14 +6,13 @@ from src.dto import ObsParams, PropParams
 from scipy.linalg import solve_banded
 
 
-def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
+def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
     where it was predicted to be.
     :param x: State vector of the satellite at a time separate from the observation
-    :param xoffset: observational offset. Will be changed eventually to the observation values. Same format as output
-    of the prediction function
+    :param yobs: Observed values of the satellite, same format as prediction function Ffun()
     :param obs_params: Observational parameters, passed directly to Ffun()
     :param prop_params: Propagation parameters, passed directly to propagate()
     :param dr: Spatial resolution to be used in derivative function.
@@ -23,8 +22,7 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     delta = np. array([dr, dr, dr, dv, dv, dv])
 
-    yobs = f(propagate(x, prop_params), obs_params)
-    ypred = f(propagate(x+xoffset, prop_params), obs_params)
+    ypred = f(propagate(x, prop_params), obs_params)
 
     xi = yobs - ypred
 

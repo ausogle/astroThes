@@ -6,6 +6,7 @@ from poliastro.bodies import Earth
 from astropy.time import Time
 from astropy import units as u
 from src.ffun import f
+from src.propagator import propagate
 
 x = np.array([66666, 0, 0, 0, -2.6551, 1])
 xoffset = np.array([100, 50, 10, .01, .01, .03])
@@ -19,14 +20,17 @@ obs_frame = Frames.ECEF.value
 obs_params = ObsParams(obs_loc, obs_frame, epoch_i)
 
 prop_params = PropParams(dt, epoch_f)
-# J2 = J2(Earth.J2.value, Earth.R.to(u.km).value)
-# prop_params.add_perturbation(Perturbations.J2.value, J2)
+J2 = J2(Earth.J2.value, Earth.R.to(u.km).value)
+prop_params.add_perturbation(Perturbations.J2.value, J2)
 
-xout = milani(x, xoffset, obs_params, prop_params)
+xobs = propagate(x+xoffset, prop_params)
+yobs = f(xobs, obs_params)
+
+xout = milani(x, yobs, obs_params, prop_params)
 
 print("The outcome of our algorithm is \nposition: ", xout[0:3], "\nvelocity: ", xout[3:6])
 print("\nCompared to the original \nposition: ", x[0:3], "\nvelocity:", x[3:6])
 print("\nDifference in observational values of x and xout")
-print(f(x, obs_params), f(xout, obs_params))
+print(yobs - f(propagate(xout, prop_params), obs_params))
 
 

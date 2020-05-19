@@ -20,7 +20,7 @@ def generate_earth_surface():
 
 def get_a(x):
     """
-    Returns semi-major axis of an orbit given the state x = [r v]
+    Returns semi-major axis of an orbit given the state x = [r v]. Unit: [km]
     """
     rr = x[0:3]
     vv = x[3:6]
@@ -33,7 +33,7 @@ def get_a(x):
 
 def get_period(x):
     """
-    Returns the period of an orbit given the state x = [r v]
+    Returns the period of an orbit given the state x = [r v]. Unit: [s]
     """
     a = get_a(x)
     t = 2*np.pi*math.sqrt(a*a*a/mu)

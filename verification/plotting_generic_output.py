@@ -5,12 +5,14 @@ from verification.util import generate_earth_surface, get_satellite_position_ove
 from src.core import milani
 from src.dto import PropParams, ObsParams
 from src.enums import Frames
+from src.propagator import propagate
+from src.ffun import f
 from astropy.time import Time
 from astropy import units as u
 from verification.util import get_period
 
 r = [66666, 0, 0]
-v = [0, -2.644, .01]
+v = [0, -2.644, 1]
 x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
 period = get_period(x)
 dt = period / 100
@@ -18,12 +20,10 @@ tf = period / 2
 epoch = Time(2454283.0, format="jd", scale="tdb")
 
 x_offset = np.array([100, 50, 10, .01, .01, .03])
-obs_loc = ["lat", "lon", "alt"]
-obs_frame = Frames.ECEF.value
-obs_params = ObsParams(obs_loc, obs_frame, epoch)
-epoch_f = epoch + tf * u.s
-prop_params = PropParams(dt, epoch_f)
-x_alg = milani(x, x_offset, obs_params, prop_params)
+obs_params = ObsParams(["lat", "lon", "alt"], Frames.ECEF.value, epoch)
+prop_params = PropParams(tf, epoch)
+yobs = f(propagate(x+x_offset, prop_params), obs_params)
+x_alg = milani(x, yobs, obs_params, prop_params)
 
 r_init = get_satellite_position_over_time(x, epoch, tf, dt)
 r_offset = get_satellite_position_over_time(x + x_offset, epoch, tf, dt)
@@ -40,9 +40,9 @@ ax.plot_surface(x, y, z, color='b')
 
 Re = 6378
 dim = 6378 * 15
-ax.set_xlim([-dim, 2*dim])
-ax.set_ylim([-dim, 2*dim])
-ax.set_zlim([-dim, 2*dim])
+ax.set_xlim([-dim, dim])
+ax.set_ylim([-dim, dim])
+ax.set_zlim([-dim, dim])
 ax.set_xlabel('x [km]')
 ax.set_ylabel('y [km]')
 ax.set_zlabel('z [km]')

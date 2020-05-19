@@ -12,9 +12,9 @@ class PropParams:
     """
     Object intended to provide all relevant information to the propagate function
     """
-    def __init__(self, dt, epoch_f):
+    def __init__(self, dt, epoch_i):
         self.dt = dt
-        self.epoch = epoch_f
+        self.epoch = epoch_i
         self.perturbations = {}
 
     def add_perturbation(self, name, perturbation):
