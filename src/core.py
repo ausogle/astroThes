@@ -28,8 +28,8 @@ def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: 
 
     max_iter = 15
     delta_x = np.ones(len(x))               #Must break the stopping criteria
-    hello = np.zeros((max_iter+1, 1))
-    hello[0] = la.norm(xi)
+    hello = []
+    hello.append(la.norm(xi))
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
         b = -derivative(x, delta, obs_params, prop_params)
@@ -43,7 +43,7 @@ def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: 
         xi = yobs - ypred
 
         i = i+1
-        hello[i] = la.norm(xi)
+        hello.append(la.norm(xi))
         if i == max_iter - 1:
             print("CAUTION: REACHED MAX ITERATIONS IN MILANI METHOD")
     print("hello")

@@ -19,3 +19,4 @@ class Frames(enum.Enum):
     """
     ECI = "ECI"
     ECEF = "ECEF"
+    LLA = "LLA"

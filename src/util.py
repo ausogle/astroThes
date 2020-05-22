@@ -1,9 +1,12 @@
 from poliastro.ephem import build_ephem_interpolant
 from astropy.coordinates import solar_system_ephemeris
-from poliastro.bodies import Earth, Moon, Sun
-from src.dto import ThirdBody
+from poliastro.bodies import Moon, Sun
+from src.dto import ThirdBody, ObsParams
+from src.enums import Frames
 from astropy import units as u
 from astropy.time import Time
+from astropy.coordinates import EarthLocation
+import numpy as np
 
 
 solar_system_ephemeris.set("de432s")
@@ -40,3 +43,24 @@ def build_callable_sun(epoch: Time, rtol=1e-2):
     body_sun = build_ephem_interpolant(Sun, 1 * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
     return ThirdBody(k_sun, body_sun)
+
+
+def convert_obs_params_from_lla_to_ecef(obs_params: ObsParams):
+    """
+    Converts Observer location from LLA to ECEF frame before calculations to limit total computational cost.
+    :param obs_params: Observational params relevant to prediction function
+    """
+    assert obs_params.frame == Frames.LLA
+    obs_params.frame = Frames.ECEF
+    obs_params.position = lla_to_ecef(obs_params.position)
+    return obs_params
+
+
+def lla_to_ecef(location: np.ndarray) -> np.ndarray:
+    """
+    Converts Lat, Lon, Alt to x,y,z position in ECEF
+    :param location: List of coordinate [lat, lon, alt].
+    """
+    loc = EarthLocation.from_geodetic(lat=location[0], lon=location[1], height=location[2])
+    r = np.array([loc.x.value, loc.y.value, loc.z.value])
+    return r

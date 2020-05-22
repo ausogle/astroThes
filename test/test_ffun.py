@@ -10,3 +10,6 @@ import pytest
 def test_prediction_function(rr, expected):
     actual = f(rr, None)
     assert np.array_equal(actual, expected)
+
+def test_eci_to_ecef():
+    r_eci = []

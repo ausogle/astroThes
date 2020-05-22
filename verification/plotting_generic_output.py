@@ -8,7 +8,6 @@ from src.enums import Frames
 from src.propagator import propagate
 from src.ffun import f
 from astropy.time import Time
-from astropy import units as u
 from verification.util import get_period
 
 r = [66666, 0, 0]
