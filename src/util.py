@@ -7,6 +7,7 @@ from astropy import units as u
 from astropy.time import Time
 from astropy.coordinates import EarthLocation
 import numpy as np
+from typing import List
 
 
 solar_system_ephemeris.set("de432s")
@@ -56,11 +57,30 @@ def convert_obs_params_from_lla_to_ecef(obs_params: ObsParams):
     return obs_params
 
 
-def lla_to_ecef(location: np.ndarray) -> np.ndarray:
+def lla_to_ecef(location: List) -> np.ndarray:
     """
     Converts Lat, Lon, Alt to x,y,z position in ECEF
-    :param location: List of coordinate [lat, lon, alt].
+    :param location: List of coordinate [lat, lon, alt]. Units [deg, deg, km]
     """
     loc = EarthLocation.from_geodetic(lat=location[0], lon=location[1], height=location[2])
     r = np.array([loc.x.value, loc.y.value, loc.z.value])
     return r
+
+
+def verify_units(obs_params: ObsParams) -> ObsParams:
+    """
+    Units are assumed to be a certain set later down the pipeline. THis function serves to ensure that the correct units
+    as being assumed.
+    :param obs_params: Observation units relevant to the prediction function
+    """
+    lla_units = [u.deg, u.deg, u.km]
+    spacial_units = [u.km, u.km, u.km]
+    if obs_params.frame == Frames.LLA:
+        desired_units = lla_units
+    else:
+        assert(obs_params.frame == Frames.ECI or Frames.ECEF)
+        desired_units = spacial_units
+    for i in range(3):
+        if obs_params.position[i].unit is not desired_units[i]:
+            obs_params.position[i].to(desired_units[i]).value
+    return obs_params

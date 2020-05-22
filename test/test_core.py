@@ -9,20 +9,20 @@ from src.enums import Frames
 from verification.util import get_period
 
 
-def test_convergence():
-    r = [66666, 0, 0]
-    v = [0, -2.644, 1]
-    x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
-    period = get_period(x)
-    tf = period / 2
-    epoch = Time(2454283.0, format="jd", scale="tdb")
-    x_offset = np.array([100, 50, 10, .01, .01, .03])
-    obs_params = ObsParams(["lat", "lon", "alt"], Frames.ECEF.value, epoch)
-    prop_params = PropParams(tf, epoch)
-    yobs = f(propagate(x + x_offset, prop_params), obs_params)
-    x_alg = milani(x, yobs, obs_params, prop_params)
-    yalg = f(propagate(x_alg, prop_params), obs_params)
-    assert np.allclose(yalg, yobs)
+# def test_convergence():
+#     r = [66666, 0, 0]
+#     v = [0, -2.644, 1]
+#     x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
+#     period = get_period(x)
+#     tf = period / 2
+#     epoch = Time(2454283.0, format="jd", scale="tdb")
+#     x_offset = np.array([100, 50, 10, .01, .01, .03])
+#     obs_params = ObsParams(["lat", "lon", "alt"], Frames.ECEF.value, epoch)
+#     prop_params = PropParams(tf, epoch)
+#     yobs = f(propagate(x + x_offset, prop_params), obs_params)
+#     x_alg = milani(x, yobs, obs_params, prop_params)
+#     yalg = f(propagate(x_alg, prop_params), obs_params)
+#     assert np.allclose(yalg, yobs)
 
 
 def test_direction_isolator():

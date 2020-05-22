@@ -1,11 +1,19 @@
 import math
 import numpy as np
-from astropy.coordinates import GCRS, ITRS, EarthLocation, CartesianRepresentation
+from astropy.coordinates import GCRS, ITRS, CartesianRepresentation
 from astropy import units as u
 from astropy.time import Time
 import numpy.linalg as la
 from src.dto import ObsParams
 from src.enums import Frames
+
+
+# def f(x, obs_params):
+#     rr = x[0:3]
+#     alpha = math.atan2(rr[1], rr[0]) * 180 / math.pi
+#     dec = 90 - math.acos(rr[2] / la.norm(rr)) * 180 / math.pi
+#     return np.array([alpha, dec])
+
 
 
 def f(x: np.ndarray, obs_params: ObsParams):
@@ -28,7 +36,7 @@ def f(x: np.ndarray, obs_params: ObsParams):
 
 def get_ra_and_dec(rr: np.ndarray) -> np.ndarray:
     """
-    Prediction function. Determines observational angles of the sateliite from observer.
+    Prediction function. Determines observational angles (WHICH) of the sateliite from observer.
     :param rr: Position of the spacecraft relative to observer
     """
     alpha = math.atan2(rr[1], rr[0]) * 180/math.pi

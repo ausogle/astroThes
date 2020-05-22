@@ -2,10 +2,10 @@ class ObsParams:
     """
     Object intended to provide all relevant information to the predictor function.
     """
-    def __init__(self, position, frame, epoch):
+    def __init__(self, position, frame, epoch_obs):
         self.position = position
         self.frame = frame
-        self.epoch = epoch
+        self.epoch = epoch_obs
 
 
 class PropParams:

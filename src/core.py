@@ -81,8 +81,6 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     for j in range(0, m):
         temp1 = propagate(x + direction_isolator(delta, j), prop_params)
         temp2 = propagate(x - direction_isolator(delta, j), prop_params)
-        temp4 = f(temp1, obs_params)
-        temp5 = f(temp2, obs_params)
         temp3 = (f(temp1, obs_params) - f(temp2, obs_params)) / (2 * delta[j])
 
         for i in range(0, n):
