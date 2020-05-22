@@ -2,19 +2,19 @@ class ObsParams:
     """
     Object intended to provide all relevant information to the predictor function.
     """
-    def __init__(self, obs_loc, obs_frame, epoch_i):
-        self.obs_loc = obs_loc
-        self.obs_frame = obs_frame
-        self.epoch_i = epoch_i
+    def __init__(self, position, frame, epoch_obs):
+        self.position = position
+        self.frame = frame
+        self.epoch = epoch_obs
 
 
 class PropParams:
     """
     Object intended to provide all relevant information to the propagate function
     """
-    def __init__(self, dt, epoch_f):
+    def __init__(self, dt, epoch_i):
         self.dt = dt
-        self.epoch = epoch_f
+        self.epoch = epoch_i
         self.perturbations = {}
 
     def add_perturbation(self, name, perturbation):

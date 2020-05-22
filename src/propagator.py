@@ -66,7 +66,7 @@ def a_d(t0, state, k, perturbations: Dict):
 
     def summation(arr):
         if len(arr) == 0:
-            return None
+            return np.zeros(3)
         output = arr[0]
         for i in range(1, len(arr)):
             output += arr[i]

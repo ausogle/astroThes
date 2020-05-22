@@ -4,6 +4,25 @@ import mockito
 from mockito import when, patch
 import pytest
 import numpy as np
+from astropy.time import Time
+from src.enums import Frames
+from verification.util import get_period
+
+
+# def test_convergence():
+#     r = [66666, 0, 0]
+#     v = [0, -2.644, 1]
+#     x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
+#     period = get_period(x)
+#     tf = period / 2
+#     epoch = Time(2454283.0, format="jd", scale="tdb")
+#     x_offset = np.array([100, 50, 10, .01, .01, .03])
+#     obs_params = ObsParams(["lat", "lon", "alt"], Frames.ECEF.value, epoch)
+#     prop_params = PropParams(tf, epoch)
+#     yobs = f(propagate(x + x_offset, prop_params), obs_params)
+#     x_alg = milani(x, yobs, obs_params, prop_params)
+#     yalg = f(propagate(x_alg, prop_params), obs_params)
+#     assert np.allclose(yalg, yobs)
 
 
 def test_direction_isolator():
@@ -49,39 +68,39 @@ def test_derivative():
         assert np.array_equal(theoretical, experimental)
 
 
-def test_qr_factorization():
-    a = np.array([[1, 0, 2], [2, 5, 5], [3, 1, 3]])
-    ainv = np.linalg.inv(a)
-    b = np.array([[1], [2], [6]])
-    x = np.matmul(ainv, b)
-    xqr = get_delta_x_from_qr_factorization(a, b)
-    assert np.allclose(x, xqr)
-
-
-def test_invert_svd():
-    a = np.array([[1, 0, 2], [2, 5, 5], [3, 1, 3]])
-    ainv = np.linalg.inv(a)
-    asvd = invert_svd(a)
-    assert np.allclose(ainv, asvd)
-
-
-def test_gauss_seidel():
-    a = np.array([[4, 1, 2], [3, 5, 1], [1, 1, 3]])
-    ainv = np.linalg.inv(a)
-    b = np.array([[4], [7], [3]])
-    x = np.matmul(ainv, b)
-    xgs = get_delta_x_from_gauss_seidel(a, b)
-    result = np.zeros((len(b), 1))
-    for i in range (0, len(b)):
-        result[i] = xgs[i]
-    assert np.allclose(x, result)
-
-
 @pytest.mark.parametrize("delta_x, rtol, vtol, expected", [(np.array([1, 2, 3, 4, 5, 6]), 10, 10, True),
                                                            (np.array([1, 2, 3, 4, 5, 6]), 1, 1, False)])
 def test_stopping_criteria(delta_x, rtol, vtol, expected):
     result = stopping_criteria(delta_x, rtol=rtol,  vtol=vtol)
     assert result == expected
+
+
+def test_diagonal_form():
+    a = np.array([[5, 2, -1, 0, 0],
+                  [1, 4, 2, -1, 0],
+                  [0, 1, 3, 2, -1],
+                  [0, 0, 1, 2, 2],
+                  [0, 0, 0, 1, 1]])
+    b = np.array([0, 1, 2, 2, 3])
+    ab = diagonal_form(a, upper=2, lower=1)
+    expected = np.array([[0, 0, -1, -1, -1],
+                         [0, 2, 2, 2, 2],
+                         [5, 4, 3, 2, 1],
+                         [1, 1, 1, 1, 0]])
+    assert np.allclose(ab, expected)
+
+
+def test_get_delta_x():
+    a = np.array([[5, 2, -1, 0, 0],
+                  [1, 4, 2, -1, 0],
+                  [0, 1, 3, 2, -1],
+                  [0, 0, 1, 2, 2],
+                  [0, 0, 0, 1, 1]])
+    b = np.array([0, 1, 2, 2, 3])
+    ab = diagonal_form(a, upper=2, lower=1)
+    x = solve_banded((1, 2), ab, b)
+    residual = a @ x - b
+    assert np.allclose(residual, np.zeros((6, 1)))
 
 
 def xcompare(a, b):

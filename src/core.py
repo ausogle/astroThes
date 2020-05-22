@@ -1,18 +1,18 @@
 import numpy as np
-from numpy import linalg as la
+from scipy import linalg as la
 from src.ffun import f
 from src.propagator import propagate
 from src.dto import ObsParams, PropParams
+from scipy.linalg import solve_banded
 
 
-def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.001) -> np.ndarray:
+def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
     where it was predicted to be.
     :param x: State vector of the satellite at a time separate from the observation
-    :param xoffset: observational offset. Will be changed eventually to the observation values. Same format as output
-    of the prediction function
+    :param yobs: Observed values of the satellite, same format as prediction function Ffun()
     :param obs_params: Observational parameters, passed directly to Ffun()
     :param prop_params: Propagation parameters, passed directly to propagate()
     :param dr: Spatial resolution to be used in derivative function.
@@ -22,35 +22,20 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
 
     delta = np. array([dr, dr, dr, dv, dv, dv])
 
-    yobs = f(propagate(x, prop_params), obs_params)
-    ypred = f(propagate(x+xoffset, prop_params), obs_params)
+    ypred = f(propagate(x, prop_params), obs_params)
 
     xi = yobs - ypred
 
-    max_iter = 5
+    max_iter = 15
     delta_x = np.ones(len(x))               #Must break the stopping criteria
-    hello = np.zeros((max_iter, 1))
+    hello = []
+    hello.append(la.norm(xi))
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
-        hello[i] = la.norm(xi)
-
         b = -derivative(x, delta, obs_params, prop_params)
-        c = np.matmul(b.transpose(), b)
-        d = -np.matmul(b.transpose(), xi)
-
-        # Built in inv() doesnt work
-        # invC = la.inv(c)
-        # deltax = np.matmul(invC, d)
-
-        # Tried using np.linalg.svd() Alas still doesnt work
-        # invC = invert_svd(c)
-        # deltax = np.matmul(invC, d)
-
-        # Tried using np.linalg.qr() Also deosn't work
-        # deltax = get_delta_x_from_qr_factorization(c, d)
-
-        # Tried using gauss-seidel approach to solve system of equations C * delta_x = d
-        delta_x = get_delta_x_from_gauss_seidel(c, d)
+        c = b.T @ b
+        d = -b.T @ xi
+        delta_x = get_delta_x(c, d)
         xnew = x + delta_x
 
         ypred = f(propagate(xnew, prop_params), obs_params)
@@ -58,11 +43,11 @@ def milani(x: np.ndarray, xoffset: np.ndarray, obs_params: ObsParams, prop_param
         xi = yobs - ypred
 
         i = i+1
+        hello.append(la.norm(xi))
         if i == max_iter - 1:
             print("CAUTION: REACHED MAX ITERATIONS IN MILANI METHOD")
-
-    print("The norm of the residuals has been", hello[0:i].transpose())
-    print("\nThe main iteration sequence ran ", i, " times\n")
+    print("hello")
+    print(hello)
     return xnew
 
 
@@ -75,7 +60,7 @@ def direction_isolator(delta: np.ndarray, i: int):
     """
     m = np.zeros((6, 6))
     m[i][i] = 1
-    return np.matmul(m, delta)
+    return m @ delta
 
 
 def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_params: PropParams, n=2) -> np.matrix:
@@ -94,7 +79,6 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
 
     a = np.zeros((n, m))
     for j in range(0, m):
-        x1 = x + direction_isolator(delta, j)
         temp1 = propagate(x + direction_isolator(delta, j), prop_params)
         temp2 = propagate(x - direction_isolator(delta, j), prop_params)
         temp3 = (f(temp1, obs_params) - f(temp2, obs_params)) / (2 * delta[j])
@@ -105,64 +89,48 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     return a
 
 
-def get_delta_x_from_qr_factorization(a: np.matrix, b: np.ndarray) -> np.ndarray:
+def get_delta_x(a: np.matrix, b: np.ndarray) -> np.ndarray:
     """
-    Solves the linear equation C*deltax = d, comparable to Ax=b, using qr factorization from numpy.
-    :param a: Is actually the c matrix from milani(), named to a for analogy to equation above.
-    :param b: Is actually the d matrix from milani().
-    :return: Returns delta_x or x from analogy
+    Solves the system of equation using the scipy wrapper for LAPACK's dgbsv function.
+    Requires converting a into ab matrix. Notably, for our system the upper and lower bandwidths are both 5.
+    :param a: A matrix in normal equation. For our problem this is C
+    :param b: b vector in normal equation. For our problem this is D
     """
-    q, r = np.linalg.qr(a.transpose())
-    x = np.matmul(q, np.matmul(np.linalg.inv(r.transpose()), b))
+    upper = 5
+    lower = 5
+    ab = diagonal_form(a, upper=upper, lower=lower)
+    x = solve_banded((upper, lower), ab, b)
+    residual = a@x-b
     return x
 
 
-def invert_svd(a: np.matrix) -> np.matrix:
+def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     """
-    Inverts a matrix using singular value decomposition function in numpy
-    :param a: matrix that needs to be inverted
-    :return: multiplicative inverse of a
+    Ripped from github.com/scipy/scipy/issues/8362. User Khalilsqu wrote the following function.
+    Converts a into ab given upper and lower bandwidths.
+    Follows notes at people.sc.kuleuven.be/~raf.vanderbril/homepage/publications/papers_html/fr_lev/node16.html
+    :param a: A matrix in normal equation. For our problem this is C
+    :param upper: Upper bandwidth of a
+    :param lower: Lower bandwidth of a
     """
-    u, s, vh = np.linalg.svd(a)
-    d = np.diag(s)
-    ainv = np.matmul(np.matmul(vh.transpose(), np.linalg.inv(d)), u.transpose())
-    return ainv
+    n = a.shape[1]
+    ab = np.zeros((2*n-1, n))
+    for i in range(n):
+        ab[i, (n-1)-i:] = np.diagonal(a, (n-1)-i)
+
+    for i in range(n-1):
+        ab[(2*n-2)-i, :i+1] = np.diagonal(a, i-(n-1))
+    mid_row_inx = int(ab.shape[0]/2)
+    upper_rows = [mid_row_inx - i for i in range(1, upper+1)]
+    upper_rows.reverse()
+    upper_rows.append(mid_row_inx)
+    lower_rows = [mid_row_inx + i for i in range(1, lower+1)]
+    keep_rows = upper_rows + lower_rows
+    ab = ab[keep_rows, :]
+    return ab
 
 
-def get_delta_x_from_gauss_seidel(a: np.matrix, b: np.ndarray, max_iter=20, tol=1e-16) -> np.ndarray:
-    """
-    Gauss-Seidel approach to solve the linear system of equations Ax = b. In our specific case this is C*delta_x = d.
-    Divergence is not uncommon from testing.
-    :param a: c matrix from milani()
-    :param b: d matrix from minlani()
-    :param max_iter: maximum number of iterations acceptable
-    :param tol: maximum tolerance for a single update for every element
-    :return: returns delta_x
-    """
-    n = len(a)
-    x = np.zeros(n)
-    x_old = np.zeros(n)
-    i = 0
-    error = tol*2
-    while i < max_iter and error > tol:
-        for j in range(0, n):
-            d = b[j]
-            for k in range(0, n):
-                if j != k:
-                    d = d - a[j][k] * x[k]
-            x[j] = d/a[j][j]
-        delta_x = x - x_old
-        error = max(abs(delta_x))
-        x_old = x - np.zeros(n)
-        i = i+1
-    if i == max_iter - 1:
-        print("CAUTION: REACHED MAX ITERATIONS IN GAUSS-SEIDEL METHOD")
-    b_prime = np.matmul(a, x)
-    print("Error observation in Gauss-Seidel Method\n", b.transpose(), "\n", b_prime.transpose())
-    return x
-
-
-def stopping_criteria(delta_x: np.ndarray, rtol=1e-3, vtol=1e-6) -> bool:
+def stopping_criteria(delta_x: np.ndarray, rtol=1e-2, vtol=1e-5) -> bool:
     """
     Determines whether or not the algorithm can stop. Currently evaluates against arbitrary conditions. To fully
     integrate rtol and vtol into code, they need to be included in one of the params objects. Tests if the position and

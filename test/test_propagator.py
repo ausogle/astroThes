@@ -1,5 +1,5 @@
 import numpy as np
-from src.propagator import a_d
+from src.propagator import a_d, propagate
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
@@ -57,16 +57,17 @@ def test_propagate_with_drag():
     assert np.array_equal(output_custom, output_f)
 
 
-def test_ad_equals_none():
+def test_propagate_with_no_perturbations():
     x = [66666, 0, 0, 0, 2.451, 0]
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
     epoch = Time(2454283.0, format="jd", scale="tdb")
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
     t = sat_i.period.to(u.s).value
-    sat_custom = sat_i.propagate(t * u.s, method=cowell, ad=None)
+    prop_params = dto.PropParams(t, epoch)
+    result = propagate(x, prop_params)
     sat_poli = sat_i.propagate(t * u.s, method=cowell)
-    theoretical = sat_custom.r.value
+    theoretical = result[0:3]
     experimental = sat_poli.r.value
     assert np.array_equal(theoretical, experimental)
 
@@ -77,4 +78,3 @@ def a_d_j2j3(t0, state, k, J2, J3, R):
 
 def a_d_nothing(t0, state, k):
     return atmospheric_drag(t0, state, k, Earth.R.to(u.km).value, 0, 0, 1, 1, 0)
-
