@@ -1,27 +1,13 @@
 from src.dto import ObsParams
 from src.enums import Frames
-import astropy.units as u
-from src.util import *
-import math
-import numpy as np
-from test.test_core import xcompare
 import mockito
-from mockito import when, patch
-from src import util
-
-
-def test_lla_to_ecef_north_pole():
-    input = [90 * u.deg, 0 * u.deg, 0 * u.km]
-    expected = np.array([0, 0, 6356.75231])
-    actual = lla_to_ecef(input)
-    assert np.allclose(actual, expected)
-
-
-def test_lla_to_ecef_greenwich():
-    input = [0 * u.deg, 0 * u.deg, 0 * u.km]
-    expected = np.array([6378.137, 0, 0])
-    actual = lla_to_ecef(input)
-    assert np.array_equal(actual, expected)
+from test.test_core import xcompare
+from mockito import patch, when
+import astropy.units as u
+from src.interface.cleaning import convert_obs_params_from_lla_to_ecef, verify_units
+from src import frames
+import numpy as np
+import math
 
 
 def test_convert_obs_params_from_lla_to_ecef():
@@ -29,7 +15,7 @@ def test_convert_obs_params_from_lla_to_ecef():
     output_pos = np.array([0, 0, 0])
     input = ObsParams(input_pos, Frames.LLA, None)
     with patch(mockito.invocation.MatchingInvocation.compare, xcompare):
-        when(util).lla_to_ecef(input_pos).thenReturn(np.array(output_pos))
+        when(frames).lla_to_ecef(input_pos).thenReturn(np.array(output_pos))
     expected = ObsParams(output_pos, Frames.ECEF, None)
     actual = convert_obs_params_from_lla_to_ecef(input)
     assert np.array_equal(expected.position, actual.position)

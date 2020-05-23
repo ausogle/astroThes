@@ -1,19 +1,15 @@
 from poliastro.ephem import build_ephem_interpolant
 from astropy.coordinates import solar_system_ephemeris
-from poliastro.bodies import Moon, Sun
-from src.dto import ThirdBody, ObsParams
-from src.enums import Frames
+from poliastro.bodies import Moon, Sun, Earth
+from src.dto import ThirdBody, J2, J3
 from astropy import units as u
 from astropy.time import Time
-from astropy.coordinates import EarthLocation
-import numpy as np
-from typing import List
 
 
 solar_system_ephemeris.set("de432s")
 
 
-def build_callable_moon(epoch: Time, lunar_period=27.3, rtol=1e-2):
+def build_callable_moon(epoch: Time, lunar_period=27.3, rtol=1e-2) -> ThirdBody:
     """
     This function creates a callable moon object for third_body perturbation. Over long periods of integration, this
     may longer prove to be an accurate description. Needs to be investigated.
@@ -30,7 +26,7 @@ def build_callable_moon(epoch: Time, lunar_period=27.3, rtol=1e-2):
     return ThirdBody(k_moon, body_moon)
 
 
-def build_callable_sun(epoch: Time, rtol=1e-2):
+def build_callable_sun(epoch: Time, rtol=1e-2) -> ThirdBody:
     """
     This function creates a callable Sun object for third_body and SRP perturbation. Over long periods of integration,
     this may longer prove to be an accurate description. Needs to be investigated.
@@ -46,41 +42,17 @@ def build_callable_sun(epoch: Time, rtol=1e-2):
     return ThirdBody(k_sun, body_sun)
 
 
-def convert_obs_params_from_lla_to_ecef(obs_params: ObsParams):
+def build_j2() -> J2:
     """
-    Converts Observer location from LLA to ECEF frame before calculations to limit total computational cost.
-    :param obs_params: Observational params relevant to prediction function
+    Builds J2 object used in propagation. Requires no input since all of the values are independent of orbital position
+    and time.
     """
-    assert obs_params.frame == Frames.LLA
-    obs_params.frame = Frames.ECEF
-    obs_params.position = lla_to_ecef(obs_params.position)
-    return obs_params
+    return J2(Earth.J2.value, Earth.R.to(u.km).value)
 
 
-def lla_to_ecef(location: List) -> np.ndarray:
+def build_j3() -> J3:
     """
-    Converts Lat, Lon, Alt to x,y,z position in ECEF
-    :param location: List of coordinate [lat, lon, alt]. Units [deg, deg, km]
+    Build J3 object used in perturbation. Requires no input since all of the values are independent of orbital position
+    and time.
     """
-    loc = EarthLocation.from_geodetic(lat=location[0], lon=location[1], height=location[2])
-    r = np.array([loc.x.value, loc.y.value, loc.z.value])
-    return r
-
-
-def verify_units(obs_params: ObsParams) -> ObsParams:
-    """
-    Units are assumed to be a certain set later down the pipeline. THis function serves to ensure that the correct units
-    as being assumed.
-    :param obs_params: Observation units relevant to the prediction function
-    """
-    lla_units = [u.deg, u.deg, u.km]
-    spacial_units = [u.km, u.km, u.km]
-    if obs_params.frame == Frames.LLA:
-        desired_units = lla_units
-    else:
-        assert(obs_params.frame == Frames.ECI or Frames.ECEF)
-        desired_units = spacial_units
-    for i in range(3):
-        if obs_params.position[i].unit is not desired_units[i]:
-            obs_params.position[i].to(desired_units[i]).value
-    return obs_params
+    return J3(Earth.J3.value, Earth.R.to(u.km).value)

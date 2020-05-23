@@ -41,25 +41,25 @@ def a_d(t0, state, k, perturbations: Dict):
     :return: Returns a force that describes the impact of all desired perturbations
     """
     fun = []
-    if Perturbations.J2.value in perturbations:
-        perturbation = perturbations.get(Perturbations.J2.value)
+    if Perturbations.J2 in perturbations:
+        perturbation = perturbations.get(Perturbations.J2)
         fun.append(J2_perturbation(t0, state, k, perturbation.J2, perturbation.R))
-    if Perturbations.Drag.value in perturbations:
-        perturbation = perturbations.get(Perturbations.Drag.value)
+    if Perturbations.Drag in perturbations:
+        perturbation = perturbations.get(Perturbations.Drag)
         fun.append(atmospheric_drag(t0, state, k, perturbation.R, perturbation.C_D, perturbation.A, perturbation.m,
                                     perturbation.H0, perturbation.rho0))
-    if Perturbations.J3.value in perturbations:
-        perturbation = perturbations.get(Perturbations.J3.value)
+    if Perturbations.J3 in perturbations:
+        perturbation = perturbations.get(Perturbations.J3)
         fun.append(J3_perturbation(t0, state, k, perturbation.J3, perturbation.R))
-    if Perturbations.SRP.value in perturbations:
-        perturbation = perturbations.get(Perturbations.SRP.value)
+    if Perturbations.SRP in perturbations:
+        perturbation = perturbations.get(Perturbations.SRP)
         fun.append(radiation_pressure(t0, state, k, perturbation.R, perturbation.C_R, perturbation.A, perturbation.m,
                                       perturbation.Wdivc_s, perturbation.star))
-    if Perturbations.Moon.value in perturbations:
-        perturbation = perturbations.get(Perturbations.Moon.value)
+    if Perturbations.Moon in perturbations:
+        perturbation = perturbations.get(Perturbations.Moon)
         fun.append(third_body(t0, state, k, perturbation.k_third, perturbation.third_body))
-    if Perturbations.Sun.value in perturbations:
-        perturbation = perturbations.get(Perturbations.Sun.value)
+    if Perturbations.Sun in perturbations:
+        perturbation = perturbations.get(Perturbations.Sun)
         fun.append(third_body(t0, state, k, perturbation.k_third, perturbation.third_body))
 
     # To add additional, or improvements upon existing perturbations, everything must be included in this function.

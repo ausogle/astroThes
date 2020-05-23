@@ -1,9 +1,9 @@
 import numpy as np
 from src.core import milani
 from src.enums import Perturbations, Frames
-from src.dto import ObsParams, PropParams, J2
-from src.util import convert_obs_params_from_lla_to_ecef, verify_units
-from poliastro.bodies import Earth
+from src.dto import ObsParams, PropParams
+from src.util import build_j2
+from src.interface.cleaning import convert_obs_params_from_lla_to_ecef, verify_units
 from astropy.time import Time
 from astropy import units as u
 from src.ffun import f
@@ -22,8 +22,7 @@ obs_params = verify_units(obs_params)
 obs_params = convert_obs_params_from_lla_to_ecef(obs_params)
 
 prop_params = PropParams(dt, epoch_f)
-J2 = J2(Earth.J2.value, Earth.R.to(u.km).value)
-prop_params.add_perturbation(Perturbations.J2.value, J2)
+prop_params.add_perturbation(Perturbations.J2, build_j2())
 
 xobs = propagate(x+xoffset, prop_params)
 yobs = f(xobs, obs_params)
