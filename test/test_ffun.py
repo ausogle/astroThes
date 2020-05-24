@@ -11,6 +11,3 @@ import pytest
 #     actual = f(rr, None)
 #     assert np.array_equal(actual, expected)
 
-def test_eci_to_ecef():
-    r_eci = []
-    assert True

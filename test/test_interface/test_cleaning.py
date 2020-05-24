@@ -5,7 +5,7 @@ from test.test_core import xcompare
 from mockito import patch, when
 import astropy.units as u
 from src.interface.cleaning import convert_obs_params_from_lla_to_ecef, verify_units
-from src import frames
+from src.interface import cleaning
 import numpy as np
 import math
 
@@ -15,7 +15,7 @@ def test_convert_obs_params_from_lla_to_ecef():
     output_pos = np.array([0, 0, 0])
     input = ObsParams(input_pos, Frames.LLA, None)
     with patch(mockito.invocation.MatchingInvocation.compare, xcompare):
-        when(frames).lla_to_ecef(input_pos).thenReturn(np.array(output_pos))
+        when(cleaning).lla_to_ecef(input_pos).thenReturn(np.array(output_pos))
     expected = ObsParams(output_pos, Frames.ECEF, None)
     actual = convert_obs_params_from_lla_to_ecef(input)
     assert np.array_equal(expected.position, actual.position)

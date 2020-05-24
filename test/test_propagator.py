@@ -1,5 +1,7 @@
 import numpy as np
 from src.propagator import a_d, propagate
+from src.util import build_j2, build_j3
+from src.enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
@@ -18,11 +20,9 @@ def test_propagate_with_j2j3():
     v = x[3:6] * u.km / u.s
     epoch = Time(2454283.0, format="jd", scale="tdb")
 
-    J2 = dto.J2(Earth.J2.value, Earth.R.to(u.km).value)
-    J3 = dto.J3(Earth.J3.value, Earth.R.to(u.km).value)
     prop_params = dto.PropParams(1, epoch)
-    prop_params.add_perturbation("J2", J2)
-    prop_params.add_perturbation("J3", J3)
+    prop_params.add_perturbation(Perturbations.J2, build_j2())
+    prop_params.add_perturbation(Perturbations.J3, build_j3())
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
     sat_f = sat_i.propagate(dt * u.s, method=cowell, ad=a_d_j2j3, J2=Earth.J2.value,
