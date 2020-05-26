@@ -130,7 +130,7 @@ def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     return ab
 
 
-def stopping_criteria(delta_x: np.ndarray, rtol=1e-2, vtol=1e-5) -> bool:
+def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:
     """
     Determines whether or not the algorithm can stop. Currently evaluates against arbitrary conditions. To fully
     integrate rtol and vtol into code, they need to be included in one of the params objects. Tests if the position and

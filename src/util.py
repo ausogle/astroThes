@@ -1,7 +1,9 @@
 from poliastro.ephem import build_ephem_interpolant
 from astropy.coordinates import solar_system_ephemeris
 from poliastro.bodies import Moon, Sun, Earth
-from src.dto import ThirdBody, J2, J3, SRP
+from poliastro.constants import Wdivc_sun, H0_earth, rho0_earth
+from src.dto import ThirdBody, J2, J3, SRP, Drag
+from src.constants import solar_period, lunar_period
 from astropy import units as u
 from astropy.time import Time
 
@@ -10,12 +12,11 @@ solar_system_ephemeris.set("de432s")
 R = Earth.R.to(u.km).value
 
 
-def build_callable_moon(epoch: Time, lunar_period=27.3, rtol=1e-2) -> ThirdBody:
+def build_callable_moon(epoch: Time, rtol=1e-2) -> ThirdBody:
     """
     This function creates a callable moon object for third_body perturbation. Over long periods of integration, this
     may longer prove to be an accurate description. Needs to be investigated.
     :param epoch:   The time about which the interpolating function is created.
-    :param lunar_period: Default value for the lunar period. Can be given a more accurate value if desired
     :param rtol: determines number of points generated. Drives the time of execution significantly. Example online used
     rtol=1e-2. A smaller number is not accepted. Could be increased for more accuracy, that being said, the position of
     the Moon does not need to be that accurate.
@@ -38,7 +39,7 @@ def build_callable_sun(epoch: Time, rtol=1e-2) -> ThirdBody:
     :return: Returns callable object that describes the Sun's position
     """
     k_sun = Sun.k.to(u.km ** 3 // u.s ** 2).value
-    body_sun = build_ephem_interpolant(Sun, 1 * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
+    body_sun = build_ephem_interpolant(Sun, solar_period * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
     return ThirdBody(k_sun, body_sun)
 
@@ -70,9 +71,16 @@ def build_srp(c_r, a, m, epoch, rtol=1e-2) -> SRP:
     rtol=1e-2. A smaller number is not accepted. Could be increased for more accuracy, that being said, the position of
     the Sun does not need to be that accurate.
     """
-    wdivc_s = 1
     body_sun = build_ephem_interpolant(Sun, 1 * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
-    return SRP(R, c_r, a, m, wdivc_s, body_sun)
+    return SRP(R, c_r, a, m, Wdivc_sun, body_sun)
 
-# Write build_drag(All but R) function. Make sure I understand new drag setups.
+
+def build_basic_drag(c_d, a, m):
+    """
+    Build Basic Atmospheric Drag Object used in perturbation.
+    :param c_d: Coefficient of Drag. Unitless
+    :param a: Cross-sectional area. Units [m^2]
+    :param m: Mass. Units [kg]
+    """
+    return Drag(R, c_d, a, m, H0_earth, rho0_earth)

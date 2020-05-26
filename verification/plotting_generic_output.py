@@ -7,7 +7,7 @@ from src.dto import PropParams, ObsParams
 from src.enums import Frames
 from src.propagator import propagate
 from src.ffun import f
-from src.util import convert_obs_params_from_lla_to_ecef
+from src.interface.cleaning import convert_obs_params_from_lla_to_ecef
 from astropy.time import Time
 import astropy.units as u
 from verification.util import get_period

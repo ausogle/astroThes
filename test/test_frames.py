@@ -30,3 +30,5 @@ def test_eci_to_ecef_and_back(input):
     middle = eci_to_ecef(input, epoch)
     actual = ecef_to_eci(middle, epoch)
     assert np.linalg.norm(actual - input) < 1e-7
+#   This test is hard to nail down. ECI and ECEF depend upon a lot of nuances and I don't have exact test cases.
+#   To supplement the there and back. Ground tracks will be observed in a verification file.
