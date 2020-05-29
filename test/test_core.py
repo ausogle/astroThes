@@ -1,6 +1,6 @@
 from src import core
 from src.core import *
-from src.interface.cleaning import convert_obs_params_from_lla_to_ecef
+from src.interface.cleaning import convert_obs_params_from_lla_to_eci
 import mockito
 from mockito import when, patch
 import pytest
@@ -21,7 +21,7 @@ def test_convergence():
     epoch = Time(2454283.0, format="jd", scale="tdb")
     x_offset = np.array([100, 50, 10, .01, .01, .03])
     obs_params = ObsParams([0 * u.deg, 0 * u.deg, 800 * u.km], Frames.LLA, epoch)
-    obs_params = convert_obs_params_from_lla_to_ecef(obs_params)
+    obs_params = convert_obs_params_from_lla_to_eci(obs_params)
     prop_params = PropParams(tf, epoch)
     yobs = y(propagate(x + x_offset, prop_params), obs_params)
     x_alg = milani(x, yobs, obs_params, prop_params)
