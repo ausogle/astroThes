@@ -6,8 +6,8 @@ from src.core import milani
 from src.dto import PropParams, ObsParams
 from src.enums import Frames
 from src.propagator import propagate
-from src.ffun import f
-from src.util import convert_obs_params_from_lla_to_ecef
+from src.observation_function import y
+from src.interface.cleaning import convert_obs_params_from_lla_to_ecef
 from astropy.time import Time
 import astropy.units as u
 from verification.util import get_period
@@ -22,11 +22,11 @@ epoch_obs = Time(2454283.0, format="jd", scale="tdb")
 epoch_i = epoch_obs - tf * u.s
 
 x_offset = np.array([100, 50, 10, .01, .01, .03])
-obs_pos = [29.2108, 81.0228, 3.9624]     #Daytona Beach, except 13 feet above sea level (6378 km)
+obs_pos = [29.2108, 81.0228, 3.9624]     #Daytona Beach, except 13 feet above sea level
 obs_params = ObsParams(obs_pos, Frames.LLA, epoch_obs)
 obs_params = convert_obs_params_from_lla_to_ecef(obs_params)
 prop_params = PropParams(tf, epoch_i)
-yobs = f(propagate(x+x_offset, prop_params), obs_params)
+yobs = y(propagate(x + x_offset, prop_params), obs_params)
 x_alg = milani(x, yobs, obs_params, prop_params)
 
 r_init = get_satellite_position_over_time(x, epoch_obs, tf, dt)
