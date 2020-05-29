@@ -12,7 +12,7 @@ solar_system_ephemeris.set("de432s")
 R = Earth.R.to(u.km).value
 
 
-def build_callable_moon(epoch: Time, rtol=1e-2) -> ThirdBody:
+def build_lunar_third_body(epoch: Time, rtol=1e-2) -> ThirdBody:
     """
     This function creates a callable moon object for third_body perturbation. Over long periods of integration, this
     may longer prove to be an accurate description. Needs to be investigated.
@@ -22,13 +22,13 @@ def build_callable_moon(epoch: Time, rtol=1e-2) -> ThirdBody:
     the Moon does not need to be that accurate.
     :return: Returns callable object that describes the Moon's position
     """
-    k_moon = Moon.k.to(u.km ** 3 // u.s ** 2).value
-    body_moon = build_ephem_interpolant(Moon, lunar_period * u.day, (epoch.value * u.day,
-                                                                     epoch.value * u.day + 60 * u.day), rtol=rtol)
+    k_moon = Moon.k.to(u.km ** 3 / u.s ** 2).value
+    body_moon = build_ephem_interpolant(Moon, lunar_period, (epoch.value * u.day,
+                                                             epoch.value * u.day + 60 * u.day), rtol=rtol)
     return ThirdBody(k_moon, body_moon)
 
 
-def build_callable_sun(epoch: Time, rtol=1e-2) -> ThirdBody:
+def build_solar_third_body(epoch: Time, rtol=1e-2) -> ThirdBody:
     """
     This function creates a callable Sun object for third_body and SRP perturbation. Over long periods of integration,
     this may longer prove to be an accurate description. Needs to be investigated.
@@ -38,8 +38,8 @@ def build_callable_sun(epoch: Time, rtol=1e-2) -> ThirdBody:
     the Sun does not need to be that accurate.
     :return: Returns callable object that describes the Sun's position
     """
-    k_sun = Sun.k.to(u.km ** 3 // u.s ** 2).value
-    body_sun = build_ephem_interpolant(Sun, solar_period * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
+    k_sun = Sun.k.to(u.km ** 3 / u.s ** 2).value
+    body_sun = build_ephem_interpolant(Sun, solar_period, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
     return ThirdBody(k_sun, body_sun)
 
@@ -73,7 +73,7 @@ def build_srp(c_r, a, m, epoch, rtol=1e-2) -> SRP:
     """
     body_sun = build_ephem_interpolant(Sun, 1 * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
-    return SRP(R, c_r, a, m, Wdivc_sun, body_sun)
+    return SRP(R, c_r, a, m, Wdivc_sun.value, body_sun)
 
 
 def build_basic_drag(c_d, a, m):

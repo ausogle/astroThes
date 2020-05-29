@@ -6,7 +6,7 @@ from src.util import build_j2
 from src.interface.cleaning import convert_obs_params_from_lla_to_ecef, verify_units
 from astropy.time import Time
 from astropy import units as u
-from src.ffun import f
+from src.observation_function import y
 from src.propagator import propagate
 
 x = np.array([66666, 0, 0, 0, -2.6551, 1])
@@ -25,13 +25,13 @@ prop_params = PropParams(dt, epoch_f)
 prop_params.add_perturbation(Perturbations.J2, build_j2())
 
 xobs = propagate(x+xoffset, prop_params)
-yobs = f(xobs, obs_params)
+yobs = y(xobs, obs_params)
 
 xout = milani(x, yobs, obs_params, prop_params)
 
 print("The outcome of our algorithm is \nposition: ", xout[0:3], "\nvelocity: ", xout[3:6])
 print("\nCompared to the original \nposition: ", x[0:3], "\nvelocity:", x[3:6])
 print("\nDifference in observational values of x and xout")
-print(yobs - f(propagate(xout, prop_params), obs_params))
+print(yobs - y(propagate(xout, prop_params), obs_params))
 
 

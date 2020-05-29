@@ -28,13 +28,17 @@ def test_verify_units_spacial():
     expected_position = [1 * u.km, 1 * u.km, 1 * u.km]
     expected_outcome = ObsParams(expected_position, Frames.ECI, None)
     actual_outcome = verify_units(obs_params_in)
-    assert(expected_outcome, actual_outcome)
+    assert expected_outcome.frame == actual_outcome.frame
+    for i in range(3):
+        assert expected_outcome.position[i] == actual_outcome.position[i]
 
 
 def test_verify_units_lla():
     position = [math.pi*2 * u.rad, math.pi*2 * u.rad, 1000 * u.m]
     obs_params_in = ObsParams(position, Frames.LLA, None)
-    expected_position = [0 * u.rad, 0 * u.rad, 1 * u.km]
-    expected_outcome = ObsParams(expected_position, Frames.ECI, None)
+    expected_position = [360 * u.deg, 360 * u.deg, 1 * u.km]
+    expected_outcome = ObsParams(expected_position, Frames.LLA, None)
     actual_outcome = verify_units(obs_params_in)
-    assert(expected_outcome, actual_outcome)
+    assert expected_outcome.frame == actual_outcome.frame
+    for i in range(3):
+        assert expected_outcome.position[i] == actual_outcome.position[i]

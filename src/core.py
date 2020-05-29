@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import linalg as la
-from src.ffun import f
+from src.observation_function import y
 from src.propagator import propagate
 from src.dto import ObsParams, PropParams
 from scipy.linalg import solve_banded
@@ -22,7 +22,7 @@ def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: 
 
     delta = np. array([dr, dr, dr, dv, dv, dv])
 
-    ypred = f(propagate(x, prop_params), obs_params)
+    ypred = y(propagate(x, prop_params), obs_params)
 
     xi = yobs - ypred
 
@@ -38,14 +38,12 @@ def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: 
         delta_x = get_delta_x(c, d)
         xnew = x + delta_x
 
-        ypred = f(propagate(xnew, prop_params), obs_params)
+        ypred = y(propagate(xnew, prop_params), obs_params)
         x = xnew - np.zeros(len(x))
         xi = yobs - ypred
 
         i = i+1
         hello.append(la.norm(xi))
-        if i == max_iter - 1:
-            print("CAUTION: REACHED MAX ITERATIONS IN MILANI METHOD")
     print("hello")
     print(hello)
     return xnew
@@ -81,11 +79,10 @@ def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_par
     for j in range(0, m):
         temp1 = propagate(x + direction_isolator(delta, j), prop_params)
         temp2 = propagate(x - direction_isolator(delta, j), prop_params)
-        temp3 = (f(temp1, obs_params) - f(temp2, obs_params)) / (2 * delta[j])
+        temp3 = (y(temp1, obs_params) - y(temp2, obs_params)) / (2 * delta[j])
 
         for i in range(0, n):
             a[i][j] = temp3[i]
-
     return a
 
 

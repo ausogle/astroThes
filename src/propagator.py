@@ -33,6 +33,10 @@ def a_d(t0, state, k, perturbations: Dict):
     Custom perturbation function that is passed directly to poliastro to be executed in their code, hence the need for
     summation() to be included within. Current structure allows user to pick and chose which perturbations they would
     like to include, requiring that the desired perturbation objects are created, filled, and passed.
+
+    Note: To improve upon existing perturbation functions or to add more, everything must be self-contained within the
+    function.
+
     :param t0: Required by poliastro
     :param state: Required by poliastro
     :param k: Required by poliastro (gravitational parameter-mu)
@@ -61,8 +65,6 @@ def a_d(t0, state, k, perturbations: Dict):
     if Perturbations.Sun in perturbations:
         perturbation = perturbations.get(Perturbations.Sun)
         fun.append(third_body(t0, state, k, perturbation.k_third, perturbation.third_body))
-
-    # To add additional, or improvements upon existing perturbations, everything must be included in this function.
 
     def summation(arr):
         if len(arr) == 0:

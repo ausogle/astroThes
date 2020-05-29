@@ -30,5 +30,5 @@ def verify_units(obs_params: ObsParams) -> ObsParams:
         desired_units = spacial_units
     for i in range(3):
         if obs_params.position[i].unit is not desired_units[i]:
-            obs_params.position[i].to(desired_units[i]).value
+            obs_params.position[i] = obs_params.position[i].to(desired_units[i])
     return obs_params

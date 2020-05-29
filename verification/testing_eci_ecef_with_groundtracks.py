@@ -13,7 +13,7 @@ dt = period/100
 tf = period
 t = np.arange(0, tf, dt)
 n = t.shape[0]
-a = math.pow(math.pow(period/2/math.pi, 2) * mu, 1/3)
+a = math.pow(math.pow(period/2/math.pi, 2) * mu.value, 1/3)
 speed = math.sqrt(mu/a)
 
 x = np.array([a, 0, 0, 0, speed, 0])
