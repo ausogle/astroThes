@@ -2,17 +2,19 @@ import numpy as np
 from scipy import linalg as la
 from src.observation_function import y
 from src.propagator import propagate
-from src.dto import ObsParams, PropParams
+from src.dto import LsqParams, ObsParams, PropParams
 from scipy.linalg import solve_banded
+from typing import Tuple
 
 
-def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
+def milani(x: np.ndarray, yobs: np.ndarray, lsq_params: LsqParams, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
     where it was predicted to be.
     :param x: State vector of the satellite at a time separate from the observation
     :param yobs: Observed values of the satellite, same format as prediction function Ffun()
+    :param lsq_params: Object that stores uncertainties in observation and state
     :param obs_params: Observational parameters, passed directly to Ffun()
     :param prop_params: Propagation parameters, passed directly to propagate()
     :param dr: Spatial resolution to be used in derivative function.
@@ -21,20 +23,20 @@ def milani(x: np.ndarray, yobs: np.ndarray, obs_params: ObsParams, prop_params: 
     """
 
     delta = np. array([dr, dr, dr, dv, dv, dv])
-
     ypred = y(propagate(x, prop_params), obs_params)
-
     xi = yobs - ypred
-
     max_iter = 15
+
+    w, l = build_lsq_matrices(lsq_params)
+
+    x_apr = x - np.zeros(6)
     delta_x = np.ones(len(x))               #Must break the stopping criteria
-    hello = []
-    hello.append(la.norm(xi))
+    hello = [la.norm(xi)]
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
-        b = -derivative(x, delta, obs_params, prop_params)
-        c = b.T @ b
-        d = -b.T @ xi
+        b = -partials(x, delta, obs_params, prop_params)
+        c = b.T @ w @ b
+        d = -b.T @ w @ xi
         delta_x = get_delta_x(c, d)
         xnew = x + delta_x
 
@@ -61,7 +63,7 @@ def direction_isolator(delta: np.ndarray, i: int):
     return m @ delta
 
 
-def derivative(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_params: PropParams, n=2) -> np.matrix:
+def partials(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_params: PropParams, n=2) -> np.matrix:
     """
     Derivative() calculates derivatives of the prediction function per variable in the state vector and returns a matrix
     where each element is the column corresponds to an element of the prediction function output and the row corresponds
@@ -97,7 +99,7 @@ def get_delta_x(a: np.matrix, b: np.ndarray) -> np.ndarray:
     lower = 5
     ab = diagonal_form(a, upper=upper, lower=lower)
     x = solve_banded((upper, lower), ab, b)
-    residual = a@x-b
+    # residual = a@x-b
     return x
 
 
@@ -141,3 +143,17 @@ def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:
     r = np.linalg.norm(delta_x[0:3])
     v = np.linalg.norm(delta_x[3:6])
     return r < rtol and v < vtol
+
+
+def build_lsq_matrices(lsq_params: LsqParams) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Builds weighted and information matrices from uncertainty values in state and observation found in lsq_params.
+    Both of these matrices are the have diagonal entries corresponding to 1/sigma_k^2.
+    :param lsq_params: Objects that stores relevant uncertainty values.
+
+    Note: The default values of both sets of sigmas in dto.py iis important. If w-matrix is identity it doesnt affect
+    any math, similarly, if l-matrix is zero nothing is affected.
+    """
+    w = np.diag(1/np.multiply(lsq_params.sigmas_obs, lsq_params.sigmas_obs))
+    l = np.diag(1/np.multiply(lsq_params.sigmas_state, lsq_params.sigmas_state))
+    return w, l

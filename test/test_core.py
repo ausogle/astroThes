@@ -24,7 +24,7 @@ def test_convergence():
     obs_params = convert_obs_params_from_lla_to_eci(obs_params)
     prop_params = PropParams(tf, epoch)
     yobs = y(propagate(x + x_offset, prop_params), obs_params)
-    x_alg = milani(x, yobs, obs_params, prop_params)
+    x_alg = milani(x, yobs, LsqParams(), obs_params, prop_params)
     yalg = y(propagate(x_alg, prop_params), obs_params)
     assert np.allclose(yalg, yobs)
 
@@ -67,7 +67,7 @@ def test_derivative():
         when(core).y(np.array([10, 20, 30, 40, 45, 60]), params).thenReturn(np.array([0, 0]))
         when(core).y(np.array([10, 20, 30, 40, 50, 66]), params).thenReturn(np.array([132, 144]))
         when(core).y(np.array([10, 20, 30, 40, 50, 54]), params).thenReturn(np.array([0, 0]))
-        experimental = derivative(x, delta, params, params)
+        experimental = partials(x, delta, params, params)
         theoretical = np.array(([1, 3, 5, 7, 9, 11], [2, 4, 6, 8, 10, 12]))
         assert np.array_equal(theoretical, experimental)
 
@@ -105,3 +105,14 @@ def test_get_delta_x():
     x = solve_banded((1, 2), ab, b)
     residual = a @ x - b
     assert np.allclose(residual, np.zeros((6, 1)))
+
+
+def test_build_lsq_matrices():
+    sigmas_obs = np.array([1, 2])
+    sigmas_state = np.array([1, 2, 3, 4, 5, 6])
+    lsq_params = LsqParams(sigmas_obs, sigmas_state)
+    w, l = build_lsq_matrices(lsq_params)
+    w_expected = np.diag(1/np.multiply(sigmas_obs, sigmas_obs))
+    l_expected = np.diag(1/np.multiply(sigmas_state, sigmas_state))
+    assert np.array_equal(w, w_expected)
+    assert np.array_equal(l, l_expected)

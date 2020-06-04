@@ -14,7 +14,7 @@ tf = period
 t = np.arange(0, tf, dt)
 n = t.shape[0]
 a = math.pow(math.pow(period/2/math.pi, 2) * mu.value, 1/3)
-speed = math.sqrt(mu/a)
+speed = math.sqrt(mu.value/a)
 
 x = np.array([a, 0, 0, 0, speed, 0])
 r_eci = get_satellite_position_over_time(x, epoch, tf, dt)

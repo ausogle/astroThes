@@ -40,7 +40,7 @@ def convert_obs_params_from_lla_to_eci(obs_params: ObsParams) -> ObsParams:
     return obs_params
 
 
-def verify_units(obs_params: ObsParams) -> ObsParams:
+def verify_locational_units(obs_params: ObsParams) -> ObsParams:
     """
     Units are assumed to be a certain set later down the pipeline. THis function serves to ensure that the correct units
     as being assumed.
