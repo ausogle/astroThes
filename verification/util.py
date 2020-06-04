@@ -2,7 +2,7 @@ import numpy as np
 import math
 from src.dto import PropParams
 from src.propagator import propagate
-mu = np.float64(398600.4418)    # gravitational constant of the Earth km^3/s^2
+from src.constants import mu
 
 
 def generate_earth_surface():
@@ -26,8 +26,8 @@ def get_a(x):
     vv = x[3:6]
     v = np.linalg.norm(vv)
     r = np.linalg.norm(rr)
-    eps = v*v/2 - (mu/r)
-    a = -mu/(2*eps)
+    eps = v*v/2 - (mu.value/r)
+    a = -mu.value/(2*eps)
     return a
 
 
@@ -36,7 +36,7 @@ def get_period(x):
     Returns the period of an orbit given the state x = [r v]. Unit: [s]
     """
     a = get_a(x)
-    t = 2*np.pi*math.sqrt(a*a*a/mu)
+    t = 2*np.pi*math.sqrt(a*a*a/mu.value)
     return t
 
 
