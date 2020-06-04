@@ -8,9 +8,9 @@ class LsqParams:
     Object intended to provide all relevant information to the Least Squares filter. Includes uncertainties in
     observational values and state measurements.
     """
-    def __init__(self, sigmas_obs=np.ones(2), sigmas_state=np.zeros(6)):
+    def __init__(self, sigmas_obs=np.ones(2), sigmas_state=np.ones(6)):
         self.sigmas_obs = sigmas_obs
-        self.sigmas_state = sigmas_state
+        self.sigmas_state = sigmas_state        # Default should give zero matrix down the road.
 
 
 class ObsParams:
