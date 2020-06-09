@@ -1,7 +1,7 @@
 import numpy as np
 from src.core import milani
 from src.enums import Perturbations, Frames
-from src.dto import LsqParams, ObsParams, PropParams
+from src.dto import LsqParams, Observation, PropParams
 from src.util import build_j2
 from src.interface.cleaning import convert_obs_params_from_lla_to_eci, verify_locational_units
 from astropy.time import Time
@@ -17,7 +17,7 @@ epoch_i.format = "jd"
 epoch_f = epoch_i + 112 * u.day
 dt = (epoch_f - epoch_i).value
 obs_position = [29.2108 * u.deg, 81.0228 * u.deg, 3.9624 * u.m]     #Daytona Beach, except 13 feet above sea level (6378 km)
-obs_params = ObsParams(obs_position, Frames.LLA, epoch_f)
+obs_params = Observation(obs_position, Frames.LLA, epoch_f)
 obs_params = verify_locational_units(obs_params)
 obs_params = convert_obs_params_from_lla_to_eci(obs_params)
 

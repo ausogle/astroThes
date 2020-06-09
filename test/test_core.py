@@ -1,32 +1,10 @@
 from src import core
 from src.core import *
-from src.interface.cleaning import convert_obs_params_from_lla_to_eci
 import mockito
 from mockito import when, patch
 import pytest
 import numpy as np
-from astropy.time import Time
-import astropy.units as u
-from src.enums import Frames
-from verification.util import get_period
 from test import xcompare
-
-
-def test_convergence():
-    r = [66666, 0, 0]
-    v = [0, -2.644, 1]
-    x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
-    period = get_period(x)
-    tf = period / 2
-    epoch = Time(2454283.0, format="jd", scale="tdb")
-    x_offset = np.array([100, 50, 10, .01, .01, .03])
-    obs_params = ObsParams([0 * u.deg, 0 * u.deg, 800 * u.km], Frames.LLA, epoch)
-    obs_params = convert_obs_params_from_lla_to_eci(obs_params)
-    prop_params = PropParams(tf, epoch)
-    yobs = y(propagate(x + x_offset, prop_params), obs_params)
-    x_alg = milani(x, yobs, LsqParams(), obs_params, prop_params)
-    yalg = y(propagate(x_alg, prop_params), obs_params)
-    assert np.allclose(yalg, yobs)
 
 
 def test_direction_isolator():
@@ -41,33 +19,35 @@ def test_derivative():
     x = np.array([10, 20, 30, 40, 50, 60])
     delta = np.array([1, 2, 3, 4, 5, 6])
     dt = 1
+    epoch_obs = None
+    observation = Observation(None, None, epoch_obs, None, None)
     params = None
     with patch(mockito.invocation.MatchingInvocation.compare, xcompare):
-        when(core).propagate(np.array([11, 20, 30, 40, 50, 60]), params).thenReturn(np.array([11, 20, 30, 40, 50, 60]))
-        when(core).propagate(np.array([9, 20, 30, 40, 50, 60]), params).thenReturn(np.array([9, 20, 30, 40, 50, 60]))
-        when(core).propagate(np.array([10, 22, 30, 40, 50, 60]), params).thenReturn(np.array([10, 22, 30, 40, 50, 60]))
-        when(core).propagate(np.array([10, 18, 30, 40, 50, 60]), params).thenReturn(np.array([10, 18, 30, 40, 50, 60]))
-        when(core).propagate(np.array([10, 20, 33, 40, 50, 60]), params).thenReturn(np.array([10, 20, 33, 40, 50, 60]))
-        when(core).propagate(np.array([10, 20, 27, 40, 50, 60]), params).thenReturn(np.array([10, 20, 27, 40, 50, 60]))
-        when(core).propagate(np.array([10, 20, 30, 44, 50, 60]), params).thenReturn(np.array([10, 20, 30, 44, 50, 60]))
-        when(core).propagate(np.array([10, 20, 30, 36, 50, 60]), params).thenReturn(np.array([10, 20, 30, 36, 50, 60]))
-        when(core).propagate(np.array([10, 20, 30, 40, 55, 60]), params).thenReturn(np.array([10, 20, 30, 40, 55, 60]))
-        when(core).propagate(np.array([10, 20, 30, 40, 45, 60]), params).thenReturn(np.array([10, 20, 30, 40, 45, 60]))
-        when(core).propagate(np.array([10, 20, 30, 40, 50, 66]), params).thenReturn(np.array([10, 20, 30, 40, 50, 66]))
-        when(core).propagate(np.array([10, 20, 30, 40, 50, 54]), params).thenReturn(np.array([10, 20, 30, 40, 50, 54]))
-        when(core).y(np.array([11, 20, 30, 40, 50, 60]), params).thenReturn(np.array([2, 4]))
-        when(core).y(np.array([9, 20, 30, 40, 50, 60]), params).thenReturn(np.array([0, 0]))
-        when(core).y(np.array([10, 22, 30, 40, 50, 60]), params).thenReturn(np.array([12, 16]))
-        when(core).y(np.array([10, 18, 30, 40, 50, 60]), params).thenReturn(np.array([0, 0]))
-        when(core).y(np.array([10, 20, 33, 40, 50, 60]), params).thenReturn(np.array([30, 36]))
-        when(core).y(np.array([10, 20, 27, 40, 50, 60]), params).thenReturn(np.array([0, 0]))
-        when(core).y(np.array([10, 20, 30, 44, 50, 60]), params).thenReturn(np.array([56, 64]))
-        when(core).y(np.array([10, 20, 30, 36, 50, 60]), params).thenReturn(np.array([0, 0]))
-        when(core).y(np.array([10, 20, 30, 40, 55, 60]), params).thenReturn(np.array([90, 100]))
-        when(core).y(np.array([10, 20, 30, 40, 45, 60]), params).thenReturn(np.array([0, 0]))
-        when(core).y(np.array([10, 20, 30, 40, 50, 66]), params).thenReturn(np.array([132, 144]))
-        when(core).y(np.array([10, 20, 30, 40, 50, 54]), params).thenReturn(np.array([0, 0]))
-        experimental = partials(x, delta, params, params)
+        when(core).propagate(np.array([11, 20, 30, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([11, 20, 30, 40, 50, 60]))
+        when(core).propagate(np.array([9, 20, 30, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([9, 20, 30, 40, 50, 60]))
+        when(core).propagate(np.array([10, 22, 30, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([10, 22, 30, 40, 50, 60]))
+        when(core).propagate(np.array([10, 18, 30, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([10, 18, 30, 40, 50, 60]))
+        when(core).propagate(np.array([10, 20, 33, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([10, 20, 33, 40, 50, 60]))
+        when(core).propagate(np.array([10, 20, 27, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([10, 20, 27, 40, 50, 60]))
+        when(core).propagate(np.array([10, 20, 30, 44, 50, 60]), epoch_obs, params).thenReturn(np.array([10, 20, 30, 44, 50, 60]))
+        when(core).propagate(np.array([10, 20, 30, 36, 50, 60]), epoch_obs, params).thenReturn(np.array([10, 20, 30, 36, 50, 60]))
+        when(core).propagate(np.array([10, 20, 30, 40, 55, 60]), epoch_obs, params).thenReturn(np.array([10, 20, 30, 40, 55, 60]))
+        when(core).propagate(np.array([10, 20, 30, 40, 45, 60]), epoch_obs, params).thenReturn(np.array([10, 20, 30, 40, 45, 60]))
+        when(core).propagate(np.array([10, 20, 30, 40, 50, 66]), epoch_obs, params).thenReturn(np.array([10, 20, 30, 40, 50, 66]))
+        when(core).propagate(np.array([10, 20, 30, 40, 50, 54]), epoch_obs, params).thenReturn(np.array([10, 20, 30, 40, 50, 54]))
+        when(core).y(np.array([11, 20, 30, 40, 50, 60]), observation).thenReturn(np.array([2, 4]))
+        when(core).y(np.array([9, 20, 30, 40, 50, 60]), observation).thenReturn(np.array([0, 0]))
+        when(core).y(np.array([10, 22, 30, 40, 50, 60]), observation).thenReturn(np.array([12, 16]))
+        when(core).y(np.array([10, 18, 30, 40, 50, 60]), observation).thenReturn(np.array([0, 0]))
+        when(core).y(np.array([10, 20, 33, 40, 50, 60]), observation).thenReturn(np.array([30, 36]))
+        when(core).y(np.array([10, 20, 27, 40, 50, 60]), observation).thenReturn(np.array([0, 0]))
+        when(core).y(np.array([10, 20, 30, 44, 50, 60]), observation).thenReturn(np.array([56, 64]))
+        when(core).y(np.array([10, 20, 30, 36, 50, 60]), observation).thenReturn(np.array([0, 0]))
+        when(core).y(np.array([10, 20, 30, 40, 55, 60]), observation).thenReturn(np.array([90, 100]))
+        when(core).y(np.array([10, 20, 30, 40, 45, 60]), observation).thenReturn(np.array([0, 0]))
+        when(core).y(np.array([10, 20, 30, 40, 50, 66]), observation).thenReturn(np.array([132, 144]))
+        when(core).y(np.array([10, 20, 30, 40, 50, 54]), observation).thenReturn(np.array([0, 0]))
+        experimental = partials(x, delta, observation, params)
         theoretical = np.array(([1, 3, 5, 7, 9, 11], [2, 4, 6, 8, 10, 12]))
         assert np.array_equal(theoretical, experimental)
 
@@ -105,14 +85,3 @@ def test_get_delta_x():
     x = solve_banded((1, 2), ab, b)
     residual = a @ x - b
     assert np.allclose(residual, np.zeros((6, 1)))
-
-
-def test_build_lsq_matrices():
-    sigmas_obs = np.array([1, 2])
-    sigmas_state = np.array([1, 2, 3, 4, 5, 6])
-    lsq_params = LsqParams(sigmas_obs, sigmas_state)
-    w, l = build_lsq_matrices(lsq_params)
-    w_expected = np.diag(1/np.multiply(sigmas_obs, sigmas_obs))
-    l_expected = np.diag(1/np.multiply(sigmas_state, sigmas_state))
-    assert np.array_equal(w, w_expected)
-    assert np.array_equal(l, l_expected)

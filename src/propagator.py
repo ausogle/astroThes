@@ -6,24 +6,27 @@ from poliastro.bodies import Earth
 from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation, radiation_pressure, \
     third_body
 from astropy import units as u
+from astropy.time import Time
 from src.dto import PropParams
 from typing import Dict
 
 
-def propagate(x: np.ndarray, params: PropParams) -> np.ndarray:
+def propagate(x: np.ndarray, epoch_obs: Time, params: PropParams) -> np.ndarray:
     """
     Propagates the state vector from moment of description to moment of observation in time another using the poliasto
     library. Allows for custom perturbations.
     :param x: State vector at time of original description
+    :param epoch_obs: Time of observation.
     :param params: object which serves as catch all for relevant info. Includes dt or amount of time between initial
     description to moment of observation, epoch of initial description, and perturbations to be included.
     :return: Returns state vector at moment of observation
     """
     r = x[0:3] * u.km
     v = x[3:6] * u.km / u.s
+    dt = epoch_obs - params.epoch
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=params.epoch)
-    sat_f = sat_i.propagate(params.dt * u.s, method=cowell, ad=a_d, perturbations=params.perturbations)
+    sat_f = sat_i.propagate(dt , method=cowell, ad=a_d, perturbations=params.perturbations)
     output = np.concatenate([sat_f.r.value, sat_f.v.value])
     return output
 

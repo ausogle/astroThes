@@ -2,53 +2,56 @@ import numpy as np
 from scipy import linalg as la
 from src.observation_function import y
 from src.propagator import propagate
-from src.dto import LsqParams, ObsParams, PropParams
+from src.dto import Observation, PropParams
 from scipy.linalg import solve_banded
-from typing import Tuple
+from typing import Tuple, List
 
 
-def milani(x: np.ndarray, yobs: np.ndarray, lsq_params: LsqParams, obs_params: ObsParams, prop_params: PropParams, dr=.1, dv=.005) -> np.ndarray:
+def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
+           l=np.zeros((6, 6)), dr=.1, dv=.005, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
     where it was predicted to be.
+
     :param x: State vector of the satellite at a time separate from the observation
-    :param yobs: Observed values of the satellite, same format as prediction function Ffun()
-    :param lsq_params: Object that stores uncertainties in observation and state
-    :param obs_params: Observational parameters, passed directly to Ffun()
+    :param observations: List of observational objects that capture location, time, and direct observational parameters.
     :param prop_params: Propagation parameters, passed directly to propagate()
+    :param l: Information matrix. Inverse of covariance matrix. Represents uncertainty in initial state. Default value
+    of zero matrix will leave the code unaffected. l_kk ~ 1/sigma_k^s.
     :param dr: Spatial resolution to be used in derivative function.
     :param dv: Resolution used for velocity in derivative function
+    :param max_iter: Maximum number of iterations for Least Squares filter
     :return: A more accurate state vector at the same time as original description, not observation
     """
 
+    n = len(x)
     delta = np. array([dr, dr, dr, dv, dv, dv])
-    ypred = y(propagate(x, prop_params), obs_params)
-    xi = yobs - ypred
-    max_iter = 15
+    delta_x = np.ones(n)  # Must break the stopping criteria
 
-    w, l = build_lsq_matrices(lsq_params)
-
-    x_apr = x - np.zeros(6)
-    delta_x = np.ones(len(x))               #Must break the stopping criteria
-    hello = [la.norm(xi)]
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
-        b = -partials(x, delta, obs_params, prop_params)
-        c = b.T @ w @ b
-        d = -b.T @ w @ xi
-        delta_x = get_delta_x(c, d)
+        c = np.zeros((n, n))
+        d = np.zeros((n, 1))
+        for observation in observations:
+            ypred = y(propagate(x, observation.epoch, prop_params), observation)
+            yobs = observation.obs_values
+            xi = yobs - ypred
+            w = np.diag(1/np.multiply(observation.obs_sigmas, observation.obs_sigmas))
+
+            b = -partials(x, delta, observation, prop_params)
+            c += b.T @ w @ b
+            d += -b.T @ w @ xi
+
+        delta_x = get_delta_x(l + c, d)
         xnew = x + delta_x
-
-        ypred = y(propagate(xnew, prop_params), obs_params)
-        x = xnew - np.zeros(len(x))
-        xi = yobs - ypred
-
+        x = xnew - np.zeros(n)
         i = i+1
-        hello.append(la.norm(xi))
-    print("hello")
-    print(hello)
-    return xnew
+
+    p = np.linalg.inv(l + c)
+    # covariance_residual = p @ (l + c) - np.eye(n)
+
+    return xnew, p
 
 
 def direction_isolator(delta: np.ndarray, i: int):
@@ -63,14 +66,14 @@ def direction_isolator(delta: np.ndarray, i: int):
     return m @ delta
 
 
-def partials(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_params: PropParams, n=2) -> np.matrix:
+def partials(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_params: PropParams, n=2) -> np.ndarray:
     """
     Derivative() calculates derivatives of the prediction function per variable in the state vector and returns a matrix
     where each element is the column corresponds to an element of the prediction function output and the row corresponds
     to an element being varied in the state vector. Uses a second-order centered difference equation.
     :param x: State vector
     :param delta: variation in position/velocity to be used in derivatives
-    :param obs_params: Observational parameters, passed directly to Ffun0(
+    :param observation: Observational parameters, passed directly to Ffun0(
     :param prop_params: Propagation parameters, passed directly to propagate()
     :param n: number of elements in prediction function output
     :return: Matrix of derivatives of the prediction function in position/velocity space
@@ -79,9 +82,9 @@ def partials(x: np.ndarray, delta: np.ndarray, obs_params: ObsParams, prop_param
 
     a = np.zeros((n, m))
     for j in range(0, m):
-        temp1 = propagate(x + direction_isolator(delta, j), prop_params)
-        temp2 = propagate(x - direction_isolator(delta, j), prop_params)
-        temp3 = (y(temp1, obs_params) - y(temp2, obs_params)) / (2 * delta[j])
+        temp1 = propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
+        temp2 = propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
+        temp3 = (y(temp1, observation) - y(temp2, observation)) / (2 * delta[j])
 
         for i in range(0, n):
             a[i][j] = temp3[i]
@@ -143,17 +146,3 @@ def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:
     r = np.linalg.norm(delta_x[0:3])
     v = np.linalg.norm(delta_x[3:6])
     return r < rtol and v < vtol
-
-
-def build_lsq_matrices(lsq_params: LsqParams) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Builds weighted and information matrices from uncertainty values in state and observation found in lsq_params.
-    Both of these matrices are the have diagonal entries corresponding to 1/sigma_k^2.
-    :param lsq_params: Objects that stores relevant uncertainty values.
-
-    Note: The default values of both sets of sigmas in dto.py iis important. If w-matrix is identity it doesnt affect
-    any math, similarly, if l-matrix is zero nothing is affected.
-    """
-    w = np.diag(1/np.multiply(lsq_params.sigmas_obs, lsq_params.sigmas_obs))
-    l = np.diag(1/np.multiply(lsq_params.sigmas_state, lsq_params.sigmas_state))
-    return w, l
