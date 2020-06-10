@@ -15,8 +15,16 @@ class Perturbations(enum.Enum):
 
 class Frames(enum.Enum):
     """
-    List of acceptable frames of reference for physical locations
+    List of acceptable frames of reference for physical locations.
     """
     ECI = "ECI"
     ECEF = "ECEF"
     LLA = "LLA"
+
+
+class Angles(enum.Enum):
+    """
+    List of acceptable angle pairs.
+    """
+    Local = "Local"
+    Celestial = "Celestial"

@@ -2,7 +2,7 @@ import numpy as np
 from src import observation_function
 from src.observation_function import *
 from src.enums import Frames
-from src.dto import ObsParams
+from src.dto import Observation
 import mockito
 import pytest
 import mockito
@@ -21,7 +21,11 @@ def test_get_ra_and_dec(rr, expected):
 
 def test_y_with_eci_frame():
     position = np.array([100, 100, 100])
-    obs_params = ObsParams(position, Frames.ECI, None)
+    epoch = None
+    obs_values = None
+    obs_type = None
+
+    obs_params = Observation(position, Frames.ECI, epoch, obs_values, obs_type)
     x = np.array([100, 200, 100])
     expected = np.array([90, 0])
     actual = y(x, obs_params)

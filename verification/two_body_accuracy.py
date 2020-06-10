@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.linalg as la
 from verification.util import *
-from src.propagator import propagate
+from src.state_propagator import state_propagate
 from src.dto import PropParams
 from astropy.time import Time
 
@@ -47,7 +47,7 @@ epoch = Time(2454283.0, format="jd", scale="tdb")
 prop_params = PropParams(dt, epoch)
 for i in range(0, len(t)):
     r_poli[i] = x[0:3]
-    x = propagate(x, prop_params)
+    x = state_propagate(x, prop_params)
     prop_params.epoch = prop_params.epoch + prop_params.dt
 
 #   Difference calculation
