@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from src.dto import PropParams
-from src.propagator import propagate
+from src.state_propagator import state_propagate
 from src.constants import mu
 
 
@@ -59,6 +59,6 @@ def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
     prop_params = PropParams(dt, epoch)
     for i in range(0, len(t)):
         r[i] = x[0:3]
-        x = propagate(x, prop_params)
+        x = state_propagate(x, prop_params)
         prop_params.epoch = prop_params.epoch + prop_params.dt
     return r

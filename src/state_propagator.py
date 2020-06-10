@@ -11,7 +11,7 @@ from src.dto import PropParams
 from typing import Dict
 
 
-def propagate(x: np.ndarray, epoch_obs: Time, params: PropParams) -> np.ndarray:
+def state_propagate(x: np.ndarray, epoch_obs: Time, params: PropParams) -> np.ndarray:
     """
     Propagates the state vector from moment of description to moment of observation in time another using the poliasto
     library. Allows for custom perturbations.
@@ -26,7 +26,7 @@ def propagate(x: np.ndarray, epoch_obs: Time, params: PropParams) -> np.ndarray:
     dt = epoch_obs - params.epoch
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=params.epoch)
-    sat_f = sat_i.propagate(dt , method=cowell, ad=a_d, perturbations=params.perturbations)
+    sat_f = sat_i.cov_propagate(dt, method=cowell, ad=a_d, perturbations=params.perturbations)
     output = np.concatenate([sat_f.r.value, sat_f.v.value])
     return output
 

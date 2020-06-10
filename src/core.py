@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import linalg as la
 from src.observation_function import y
-from src.propagator import propagate
+from src.state_propagator import state_propagate
 from src.dto import Observation, PropParams
 from scipy.linalg import solve_banded
 from typing import Tuple, List
@@ -34,12 +34,12 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
         c = np.zeros((n, n))
         d = np.zeros((n, 1))
         for observation in observations:
-            ypred = y(propagate(x, observation.epoch, prop_params), observation)
+            ypred = y(state_propagate(x, observation.epoch, prop_params), observation)
             yobs = observation.obs_values
             xi = yobs - ypred
             w = np.diag(1/np.multiply(observation.obs_sigmas, observation.obs_sigmas))
 
-            b = -partials(x, delta, observation, prop_params)
+            b = -dy_dstate(x, delta, observation, prop_params)
             c += b.T @ w @ b
             d += -b.T @ w @ xi
 
@@ -57,6 +57,7 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
 def direction_isolator(delta: np.ndarray, i: int):
     """
     direction_isolator() manipulates the delta array to return an empty array with the exc
+
     :param delta: Input array of step sizes for calculating derivatives around the state vector
     :param i: the element of delta desired to be preserved.
     :return: Near empty array, where the ith element is the ith element of delta.
@@ -66,11 +67,12 @@ def direction_isolator(delta: np.ndarray, i: int):
     return m @ delta
 
 
-def partials(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_params: PropParams, n=2) -> np.ndarray:
+def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_params: PropParams, n=2) -> np.ndarray:
     """
-    Derivative() calculates derivatives of the prediction function per variable in the state vector and returns a matrix
-    where each element is the column corresponds to an element of the prediction function output and the row corresponds
+    dy_dstate() calculates derivatives of the prediction function per state vector and returns a matrix where each
+    element is the column corresponds to an element of the prediction function output and the row corresponds
     to an element being varied in the state vector. Uses a second-order centered difference equation.
+
     :param x: State vector
     :param delta: variation in position/velocity to be used in derivatives
     :param observation: Observational parameters, passed directly to Ffun0(
@@ -82,8 +84,8 @@ def partials(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_pa
 
     a = np.zeros((n, m))
     for j in range(0, m):
-        temp1 = propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
-        temp2 = propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
+        temp1 = state_propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
+        temp2 = state_propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
         temp3 = (y(temp1, observation) - y(temp2, observation)) / (2 * delta[j])
 
         for i in range(0, n):
@@ -95,6 +97,7 @@ def get_delta_x(a: np.matrix, b: np.ndarray) -> np.ndarray:
     """
     Solves the system of equation using the scipy wrapper for LAPACK's dgbsv function.
     Requires converting a into ab matrix. Notably, for our system the upper and lower bandwidths are both 5.
+
     :param a: A matrix in normal equation. For our problem this is C
     :param b: b vector in normal equation. For our problem this is D
     """
@@ -111,6 +114,7 @@ def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     Ripped from github.com/scipy/scipy/issues/8362. User Khalilsqu wrote the following function.
     Converts a into ab given upper and lower bandwidths.
     Follows notes at people.sc.kuleuven.be/~raf.vanderbril/homepage/publications/papers_html/fr_lev/node16.html
+
     :param a: A matrix in normal equation. For our problem this is C
     :param upper: Upper bandwidth of a
     :param lower: Lower bandwidth of a
@@ -138,6 +142,7 @@ def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:
     integrate rtol and vtol into code, they need to be included in one of the params objects. Tests if the position and
     velocity are within a certain distance of the previous iteration. Assuming with each step we get closer, this
     implies we were within the specified tolerances supplied, or assumed above.
+
     :param delta_x: difference in state vector from previous interation
     :param rtol: tolerance on change in position [km]
     :param vtol: tolerance on change in velocity [km/s]
