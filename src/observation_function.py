@@ -1,11 +1,11 @@
 import numpy as np
 import numpy.linalg as la
-from src.dto import ObsParams
+from src.dto import Observation
 from src.enums import Frames
 from src.interface.cleaning import verify_locational_units
 
 
-def y(x: np.ndarray, obs_params: ObsParams):
+def y(x: np.ndarray, obs_params: Observation):
     """
     This function serves as a prediction function. It is used to describe the right ascension and declination of an
     observed satellite from an observer. Math is done in ECI Frame

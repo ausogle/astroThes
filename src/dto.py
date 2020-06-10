@@ -1,34 +1,27 @@
 from typing import List
 import numpy as np
 from astropy.time import Time
+from src.enums import Angles, Frames
 
 
-class LsqParams:
-    """
-    Object intended to provide all relevant information to the Least Squares filter. Includes uncertainties in
-    observational values and state measurements.
-    """
-    def __init__(self, sigmas_obs=np.ones(2), sigmas_state=np.ones(6)):
-        self.sigmas_obs = sigmas_obs
-        self.sigmas_state = sigmas_state        # Default should give zero matrix down the road.
-
-
-class ObsParams:
+class Observation:
     """
     Object intended to provide all relevant information to the predictor function.
     """
-    def __init__(self, position, frame, epoch_obs: Time):
+    def __init__(self, position, frame: Frames, epoch_obs: Time, obs_values: np.ndarray, obs_type: Angles, obs_sigmas=np.ones(2)):
         self.position = position   # If LLA frame, this is a list. If ECI/ECEF this is a numpy array. See cleaning.py
         self.frame = frame
         self.epoch = epoch_obs
+        self.obs_values = obs_values
+        self.obs_sigmas = obs_sigmas
+        self.obs_type = obs_type
 
 
 class PropParams:
     """
     Object intended to provide all relevant information to the propagate function
     """
-    def __init__(self, dt: float, epoch_i: Time):
-        self.dt = dt
+    def __init__(self, epoch_i: Time):
         self.epoch = epoch_i
         self.perturbations = {}
 
