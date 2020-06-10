@@ -1,2 +1,6 @@
 .pytest_cache
 src/__pycache__/
+test/.coverage
+verification/__pycache__/
+src/interface/.pytest_cache
+testing_ground.py
