@@ -8,6 +8,7 @@ from verification.util import *
 from src.state_propagator import state_propagate
 from src.dto import PropParams
 from astropy.time import Time
+import astropy.units as u
 
 
 r = [66666, 0, 0]
@@ -24,7 +25,7 @@ rr0 = r - np.zeros(len(r))
 vv0 = v - np.zeros(len(r))
 r0 = la.norm(rr0)
 v0 = la.norm(vv0)
-n = math.sqrt(mu/(a*a*a))
+n = math.sqrt(mu.value/(a*a*a))
 
 t = np.arange(0, period*10, dt)
 F = np.zeros((len(t), 1))
@@ -37,18 +38,19 @@ for i in range(0, len(M)):
     for j in range(0, 8):
         E = E + (M[i] - E+e*np.sin(E))/(1-e*np.cos(E))
     F[i] = 1-(a/r0)*(1-np.cos(E))
-    G[i] = t[i] + math.sqrt(a*a*a/mu)*(np.sin(E)-E)
+    G[i] = t[i] + math.sqrt(a*a*a/mu.value)*(np.sin(E)-E)
     r_lg[i] = F[i]*rr0 + G[i]*vv0
 
 
 #   Poliastro construction
 r_poli = np.zeros((len(t), 3))
 epoch = Time(2454283.0, format="jd", scale="tdb")
-prop_params = PropParams(dt, epoch)
+prop_params = PropParams(epoch)
 for i in range(0, len(t)):
     r_poli[i] = x[0:3]
-    x = state_propagate(x, prop_params)
-    prop_params.epoch = prop_params.epoch + prop_params.dt
+    epoch = epoch + dt * u.s
+    x = state_propagate(x, epoch, prop_params)
+    prop_params.epoch = epoch
 
 #   Difference calculation
 r_diff = r_lg - r_poli
@@ -56,7 +58,7 @@ diff = np.zeros((len(t), 1))
 for i in range(0, len(t)):
     diff[i] = la.norm(r_diff[i])
 
-#   Plots orbits on top of oen another
+#   Plots orbits on top of one another
 x, y, z = generate_earth_surface()
 fig = plt.figure()
 ax = fig.gca(projection='3d')
