@@ -9,6 +9,9 @@ from src.state_propagator import state_propagate
 from src.dto import PropParams
 from astropy.time import Time
 import astropy.units as u
+from poliastro.twobody import Orbit
+from poliastro.bodies import Earth
+from poliastro.twobody.propagation import cowell
 
 
 r = [66666, 0, 0]
@@ -75,10 +78,11 @@ ax.set_zlabel('z')
 plt.show()
 
 #   Plot difference in two orbit proagation methods
+t = t/86400
 fig = plt.figure(2)
 ax = fig.gca()
 plt.plot(t, diff)
-ax.set_xlabel('time [s]')
+ax.set_xlabel('time [day]')
 ax.set_ylabel('Difference in position between Lagrange/Gibbs and Poliastro')
 plt.show()
 

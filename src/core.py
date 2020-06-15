@@ -8,7 +8,7 @@ from typing import Tuple, List
 
 
 def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
-           l=np.zeros((6, 6)), dr=.1, dv=.005, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
+           l=np.zeros((6, 6)), dr=1, dv=.05, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
@@ -32,24 +32,25 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
         c = np.zeros((n, n))
-        d = np.zeros((n, 1))
+        d = np.zeros(n)
         for observation in observations:
             ypred = y(state_propagate(x, observation.epoch, prop_params), observation)
             yobs = observation.obs_values
             xi = yobs - ypred
             w = np.diag(1/np.multiply(observation.obs_sigmas, observation.obs_sigmas))
 
-            b = -dy_dstate(x, delta, observation, prop_params)
+            b = dy_dstate(x, delta, observation, prop_params)
             c += b.T @ w @ b
-            d += -b.T @ w @ xi
-
-        delta_x = get_delta_x(l + c, d)
+            d += b.T @ w @ xi
+        # p = get_inverse(c)
+        # delta_x = p @ d
+        delta_x = get_delta_x(c, d)
         xnew = x + delta_x
         x = xnew - np.zeros(n)
         i = i+1
 
-    p = np.linalg.inv(l + c)
-    # covariance_residual = p @ (l + c) - np.eye(n)
+    p = get_inverse(c)
+    # p = np.linalg.inv(l + c)
 
     return xnew, p
 
@@ -86,10 +87,10 @@ def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_p
     for j in range(0, m):
         temp1 = state_propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
         temp2 = state_propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
-        temp3 = (y(temp1, observation) - y(temp2, observation)) / (2 * delta[j])
+        temp3 = (y(temp1, observation) - y(temp2, observation))
 
         for i in range(0, n):
-            a[i][j] = temp3[i]
+            a[i][j] = temp3[i] / (2 * delta[j])
     return a
 
 
@@ -105,8 +106,17 @@ def get_delta_x(a: np.matrix, b: np.ndarray) -> np.ndarray:
     lower = 5
     ab = diagonal_form(a, upper=upper, lower=lower)
     x = solve_banded((upper, lower), ab, b)
-    # residual = a@x-b
+    residual = a@x-b
+    print("residual")
+    print(np.linalg.norm(residual))
     return x
+
+
+def get_inverse(c: np.ndarray):
+    inv = get_delta_x(c, np.eye(6))
+    residual = c @ inv - np.eye(6)
+    print(np.linalg.norm(residual))
+    return inv
 
 
 def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
@@ -122,6 +132,7 @@ def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     n = a.shape[1]
     ab = np.zeros((2*n-1, n))
     for i in range(n):
+        temp = np.diagonal(a, (n-1)-i)
         ab[i, (n-1)-i:] = np.diagonal(a, (n-1)-i)
 
     for i in range(n-1):
@@ -134,6 +145,20 @@ def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     keep_rows = upper_rows + lower_rows
     ab = ab[keep_rows, :]
     return ab
+
+
+def svd(a):
+    u, s, v = np.linalg.svd(a)
+    print("svd")
+    print(s)
+
+
+def invert_svd(a: np.ndarray):
+    u, s, v = la.svd(a)
+    ai = v.T @ np.diag(s) @ u.T
+    print("SVD inversion residual")
+    print(ai @ a)
+    return ai
 
 
 def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:

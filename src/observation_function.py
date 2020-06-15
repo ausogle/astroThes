@@ -5,16 +5,16 @@ from src.enums import Frames
 from src.interface.cleaning import verify_locational_units
 
 
-def y(x: np.ndarray, obs_params: Observation):
+def y(x: np.ndarray, observation: Observation):
     """
     This function serves as a prediction function. It is used to describe the right ascension and declination of an
     observed satellite from an observer. Math is done in ECI Frame
     :param x: State Vector of satellite in ECI frame.
-    :param obs_params: Parameters relevant to observation. Includes epoch, frame, and location of observation/observer.
+    :param observation: Parameters relevant to observation. Includes epoch, frame, and location of observation/observer.
     """
     r_obj = x[0:3]
-    assert obs_params.frame == Frames.ECI
-    rr = r_obj - obs_params.position
+    assert observation.frame == Frames.ECI
+    rr = r_obj - observation.position
     alpha, dec = get_ra_and_dec(rr)
     return np.array([alpha, dec])
 

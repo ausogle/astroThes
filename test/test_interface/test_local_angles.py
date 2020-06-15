@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from src.interface.angle_conversion import rotation_matrix, local_angles
+from src.interface.local_angles import rotation_matrix, local_angles
 import pytest
 import astropy.units as u
 

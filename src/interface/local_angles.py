@@ -66,7 +66,7 @@ def rotation_matrix(lat, lon):
 
 
 def get_local_angles_for_state_propagation(x: np.ndarray, prop_params: PropParams, epoch_f: Time, n: int,
-                                           obs_location, obs_frame: Frames) -> List[List[Angle, Angle, Time]]:
+                                           obs_location, obs_frame: Frames):
     """
     This function returns a list of [theta, phi, Time] from initial epoch in prop_params to final epoch, with an
     n points between those two epochs.

@@ -1,8 +1,12 @@
 import numpy as np
 import math
-from src.dto import PropParams
+from src.dto import PropParams, Observation
+from src.enums import Angles, Frames
 from src.state_propagator import state_propagate
+from src.interface.cleaning import convert_obs_from_lla_to_eci
+from src.observation_function import y
 from src.constants import mu
+import astropy.units as u
 
 
 def generate_earth_surface():
@@ -54,11 +58,33 @@ def get_e(x):
 
 
 def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
-    t = np.arange(0, tf, dt)
+    t = np.arange(0, tf, dt)            #Units of s. No astropy unit attached, just a scalar
     r = np.zeros((len(t), 3))
-    prop_params = PropParams(dt, epoch)
-    for i in range(0, len(t)):
+    prop_params = PropParams(epoch)
+    r[0] = x[0:3]
+    for i in range(1, len(t)):
+        desired_epoch = epoch + t[i] * u.s
+        x = state_propagate(x, desired_epoch, prop_params)
         r[i] = x[0:3]
-        x = state_propagate(x, prop_params)
-        prop_params.epoch = prop_params.epoch + prop_params.dt
+        prop_params.epoch = desired_epoch
     return r
+
+
+def build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.ones(2)):
+    output = []
+    temp_obs = Observation(obs_pos, frame, None, None, Angles.Celestial, sigmas)
+    if frame == Frames.LLA:
+        temp_obs = convert_obs_from_lla_to_eci(temp_obs)
+    for epoch in epochs:
+        x_k = state_propagate(x, epoch, prop_params)
+        temp_obs.obs_values = y(x_k, temp_obs)
+        temp_obs.epoch = epoch
+        output.append(temp_obs)
+    return output
+
+
+def build_epochs(epoch, stepsize, steps):
+    epochs = []
+    for i in range(steps):
+        epochs.append(epoch + i * stepsize)
+    return epochs
