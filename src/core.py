@@ -44,7 +44,8 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
             d += b.T @ w @ xi
         # p = get_inverse(c)
         # delta_x = p @ d
-        delta_x = get_delta_x(c, d)
+        # delta_x = get_delta_x(c, d)
+        delta_x = b.T @ get_inverse(b @ b.T) * xi
         xnew = x + delta_x
         x = xnew - np.zeros(n)
         i = i+1
