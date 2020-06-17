@@ -8,7 +8,7 @@ from typing import Tuple, List
 
 
 def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
-           l=np.zeros((6, 6)), dr=.1, dv=.005, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
+           dr=.1, dv=.005, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
@@ -43,12 +43,12 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
             c += b.T @ w @ b
             d += -b.T @ w @ xi
 
-        delta_x = get_delta_x(l + c, d)
+        delta_x = get_delta_x(c, d)
         xnew = x + delta_x
         x = xnew - np.zeros(n)
         i = i+1
 
-    p = np.linalg.inv(l + c)
+    p = np.linalg.inv(c)
     # covariance_residual = p @ (l + c) - np.eye(n)
 
     return xnew, p
@@ -86,10 +86,10 @@ def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_p
     for j in range(0, m):
         temp1 = state_propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
         temp2 = state_propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
-        temp3 = (y(temp1, observation) - y(temp2, observation)) / (2 * delta[j])
+        temp3 = (y(temp1, observation) - y(temp2, observation))
 
         for i in range(0, n):
-            a[i][j] = temp3[i]
+            a[i][j] = temp3[i] / (2 * delta[i])
     return a
 
 

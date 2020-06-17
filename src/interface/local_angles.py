@@ -2,7 +2,7 @@ import numpy as np
 from typing import List
 
 
-def local_angles(rr: np.ndarray, lla: List) -> np.ndarray:
+def local_angles(rr: np.ndarray, lla: List):
     """
     Gives local azimuth and zenith angles for a satellite with respect to an observer's position on the Earth. Theta is
     the zenith angel, measured from directly above. The azimuthal angle is phi, measured from local North, where
@@ -14,10 +14,10 @@ def local_angles(rr: np.ndarray, lla: List) -> np.ndarray:
     rot_mat = rotation_matrix(lla[0].value, lla[1].value)
     local_sky = rot_mat.T @ rr
 
-    theta = np.arccos(local_sky[2] / np.linalg.norm(local_sky)) * 180 / np.pi
-    phi = 90 - np.arctan2(-local_sky[0], local_sky[1]) * 180 / np.pi
+    elevation = 90 - np.arccos(local_sky[2] / np.linalg.norm(local_sky)) * 180 / np.pi #Changed for elevation not declination. Not included in comments above.
+    azimuth = 90 - np.arctan2(-local_sky[0], local_sky[1]) * 180 / np.pi
 
-    return np.array([theta, phi])
+    return azimuth, elevation
 
 
 def ry(lat: float) -> np.ndarray:
