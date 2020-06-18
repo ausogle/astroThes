@@ -8,7 +8,7 @@ from typing import Tuple, List
 
 
 def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
-           l=np.zeros((6, 6)), dr=1, dv=.05, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
+           dr=1, dv=.05, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
@@ -17,8 +17,6 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     :param x: State vector of the satellite at a time separate from the observation
     :param observations: List of observational objects that capture location, time, and direct observational parameters.
     :param prop_params: Propagation parameters, passed directly to propagate()
-    :param l: Information matrix. Inverse of covariance matrix. Represents uncertainty in initial state. Default value
-    of zero matrix will leave the code unaffected. l_kk ~ 1/sigma_k^s.
     :param dr: Spatial resolution to be used in derivative function.
     :param dv: Resolution used for velocity in derivative function
     :param max_iter: Maximum number of iterations for Least Squares filter
@@ -42,17 +40,15 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
             b = dy_dstate(x, delta, observation, prop_params)
             c += b.T @ w @ b
             d += b.T @ w @ xi
-        # p = get_inverse(c)
-        # delta_x = p @ d
-        # delta_x = get_delta_x(c, d)
-        delta_x = b.T @ get_inverse(b @ b.T) * xi
+        delta_x = get_delta_x(c, d)
         xnew = x + delta_x
         x = xnew - np.zeros(n)
         i = i+1
 
     p = get_inverse(c)
-    # p = np.linalg.inv(l + c)
-
+    covariance_residual = la.norm(p @ c - np.eye(6))
+    print("Covariance Residual")
+    print(covariance_residual)
     return xnew, p
 
 
@@ -88,23 +84,22 @@ def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_p
     for j in range(0, m):
         temp1 = state_propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
         temp2 = state_propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
-        temp3 = (y(temp1, observation) - y(temp2, observation))
-
+        temp3 = (y(temp1, observation) - y(temp2, observation)) / (2 * delta[j])
         for i in range(0, n):
-            a[i][j] = temp3[i] / (2 * delta[j])
+            a[i][j] = temp3[i]
     return a
 
 
-def get_delta_x(a: np.matrix, b: np.ndarray) -> np.ndarray:
+def get_delta_x(a: np.matrix, b: np.ndarray, upper=5, lower=5) -> np.ndarray:
     """
     Solves the system of equation using the scipy wrapper for LAPACK's dgbsv function.
     Requires converting a into ab matrix. Notably, for our system the upper and lower bandwidths are both 5.
 
     :param a: A matrix in normal equation. For our problem this is C
-    :param b: b vector in normal equation. For our problem this is D
+    :param b: b vector in normal equation. For our problem this is
+    :param upper: Upper bandwidth of matric C
+    :param lower: Lower bandwidth of matrix c
     """
-    upper = 5
-    lower = 5
     ab = diagonal_form(a, upper=upper, lower=lower)
     x = solve_banded((upper, lower), ab, b)
     residual = a@x-b
@@ -120,7 +115,7 @@ def get_inverse(c: np.ndarray):
     return inv
 
 
-def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
+def diagonal_form(a: np.matrix, upper=5, lower=5) -> np.matrix:
     """
     Ripped from github.com/scipy/scipy/issues/8362. User Khalilsqu wrote the following function.
     Converts a into ab given upper and lower bandwidths.
@@ -133,7 +128,6 @@ def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     n = a.shape[1]
     ab = np.zeros((2*n-1, n))
     for i in range(n):
-        temp = np.diagonal(a, (n-1)-i)
         ab[i, (n-1)-i:] = np.diagonal(a, (n-1)-i)
 
     for i in range(n-1):
@@ -146,20 +140,6 @@ def diagonal_form(a: np.matrix, upper=1, lower=1) -> np.matrix:
     keep_rows = upper_rows + lower_rows
     ab = ab[keep_rows, :]
     return ab
-
-
-def svd(a):
-    u, s, v = np.linalg.svd(a)
-    print("svd")
-    print(s)
-
-
-def invert_svd(a: np.ndarray):
-    u, s, v = la.svd(a)
-    ai = v.T @ np.diag(s) @ u.T
-    print("SVD inversion residual")
-    print(ai @ a)
-    return ai
 
 
 def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:

@@ -3,7 +3,7 @@ import math
 from src.dto import PropParams, Observation
 from src.enums import Angles, Frames
 from src.state_propagator import state_propagate
-from src.interface.cleaning import convert_obs_from_lla_to_eci
+from src.frames import lla_to_ecef, ecef_to_eci
 from src.observation_function import y
 from src.constants import mu
 import astropy.units as u
@@ -70,16 +70,19 @@ def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
     return r
 
 
-def build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.ones(2)):
+sigma_theta = .003
+
+
+def build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([sigma_theta, sigma_theta])):
     output = []
-    temp_obs = Observation(obs_pos, frame, None, None, Angles.Celestial, sigmas)
-    if frame == Frames.LLA:
-        temp_obs = convert_obs_from_lla_to_eci(temp_obs)
-    for epoch in epochs:
+    temp = []
+    for k in range(len(epochs)):
+        epoch = epochs[k]
         x_k = state_propagate(x, epoch, prop_params)
-        temp_obs.obs_values = y(x_k, temp_obs)
-        temp_obs.epoch = epoch
-        output.append(temp_obs)
+        pos = ecef_to_eci(lla_to_ecef(obs_pos), epoch)
+        temp.append(Observation(pos, Frames.ECI, epoch, None, Angles.Local, sigmas))
+        obs_values = y(x_k, temp[k])
+        output.append(Observation(pos, Frames.ECI, epoch, obs_values, Angles.Local, sigmas))
     return output
 
 

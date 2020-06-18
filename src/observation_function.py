@@ -2,7 +2,6 @@ import numpy as np
 import numpy.linalg as la
 from src.dto import Observation
 from src.enums import Frames
-from src.interface.cleaning import verify_locational_units
 
 
 def y(x: np.ndarray, observation: Observation):

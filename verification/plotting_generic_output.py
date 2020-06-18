@@ -3,11 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from verification.util import generate_earth_surface, get_satellite_position_over_time, build_observations, build_epochs
 from src.core import milani
-from src.dto import PropParams, Observation
-from src.enums import Frames, Angles
-from src.state_propagator import state_propagate
-from src.observation_function import y
-from src.interface.cleaning import convert_obs_from_lla_to_eci
+from src.dto import PropParams
+from src.enums import Frames
 from astropy.time import Time
 import astropy.units as u
 from verification.util import get_period
@@ -15,7 +12,7 @@ from verification.util import get_period
 r = [5748.6001, 2679, 3443]
 v = [4.33, -1.922, -5.726]
 x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
-x_offset = np.array([100, 100, 100, .1, .1, .1])
+x_offset = np.array([500, 100, 100, .2, .1, .1])
 x_true = x + x_offset
 period = get_period(x)
 dt = period / 100
