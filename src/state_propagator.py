@@ -26,7 +26,7 @@ def state_propagate(x: np.ndarray, epoch_obs: Time, params: PropParams) -> np.nd
     dt = epoch_obs - params.epoch
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=params.epoch)
-    sat_f = sat_i.cov_propagate(dt, method=cowell, ad=a_d, perturbations=params.perturbations)
+    sat_f = sat_i.propagate(dt, method=cowell, ad=a_d, perturbations=params.perturbations)
     output = np.concatenate([sat_f.r.value, sat_f.v.value])
     return output
 

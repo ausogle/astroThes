@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from src.interface.angle_conversion import rotation_matrix, local_angles
+from src.interface.local_angles import rotation_matrix, local_angles
 import pytest
 import astropy.units as u
 
@@ -22,13 +22,13 @@ norm = np.linalg.norm(np.array([1, 2, 3]))
 rtd = 180 / np.pi
 
 
-@pytest.mark.parametrize("lla, expected", [([90 * u.deg, 0 * u.deg, 0 * u.km],
+@pytest.mark.parametrize("lla, expected", [([90 * u.deg, 0 * u.deg, 10 * u.km],
                                             np.array([np.arccos(3/norm)*rtd, 90 - np.arctan2(-1, 2) * rtd])),
-                                           ([0 * u.deg, 0 * u.deg, 0 * u.km],
+                                           ([0 * u.deg, 0 * u.deg, 10 * u.km],
                                             np.array([np.arccos(1/norm)*rtd, 90 - np.arctan2(3, 2) * rtd])),
-                                           ([0 * u.deg, 90 * u.deg, 0 * u.km],
+                                           ([0 * u.deg, 90 * u.deg, 10 * u.km],
                                             np.array([np.arccos(2/norm)*rtd, 90 - np.arctan2(3, -1) * rtd])),
-                                           ([-90 * u.deg, 0 * u.deg, 0 * u.km],
+                                           ([-90 * u.deg, 0 * u.deg, 10 * u.km],
                                             np.array([np.arccos(-3/norm)*rtd, 90 - np.arctan2(1, 2) * rtd]))])
 def test_local_angles(lla, expected):
     rr = np.array([1, 2, 3])

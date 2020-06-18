@@ -28,16 +28,16 @@ def convert_obs_from_ecef_to_eci(observation: Observation) -> Observation:
     return observation
 
 
-def convert_obs_from_lla_to_eci(obs_params: Observation) -> Observation:
+def convert_obs_from_lla_to_eci(observation: Observation) -> Observation:
     """
     Converts Observer location from LLA to ECI frame before calculations to limit total computational cost.
 
-    :param obs_params: Observational params relevant to prediction function
+    :param observation: Observational params relevant to prediction function
     """
-    assert obs_params.frame == Frames.LLA
-    obs_params.frame = Frames.ECI
-    obs_params.position = ecef_to_eci(lla_to_ecef(obs_params.position), obs_params.epoch)
-    return obs_params
+    assert observation.frame == Frames.LLA
+    observation.frame = Frames.ECI
+    observation.position = ecef_to_eci(lla_to_ecef(observation.position), observation.epoch)
+    return observation
 
 
 def verify_locational_units(obs_params: Observation) -> Observation:

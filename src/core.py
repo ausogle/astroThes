@@ -17,8 +17,6 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     :param x: State vector of the satellite at a time separate from the observation
     :param observations: List of observational objects that capture location, time, and direct observational parameters.
     :param prop_params: Propagation parameters, passed directly to propagate()
-    :param l: Information matrix. Inverse of covariance matrix. Represents uncertainty in initial state. Default value
-    of zero matrix will leave the code unaffected. l_kk ~ 1/sigma_k^s.
     :param dr: Spatial resolution to be used in derivative function.
     :param dv: Resolution used for velocity in derivative function
     :param max_iter: Maximum number of iterations for Least Squares filter
@@ -32,7 +30,7 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     i = 0
     while not stopping_criteria(delta_x) and i < max_iter:
         c = np.zeros((n, n))
-        d = np.zeros((n, 1))
+        d = np.zeros(n)
         for observation in observations:
             ypred = y(state_propagate(x, observation.epoch, prop_params), observation)
             yobs = observation.obs_values
@@ -41,6 +39,7 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
 
             b = -dy_dstate(x, delta, observation, prop_params)
             c += b.T @ w @ b
+            temp = -b.T @ w @ xi
             d += -b.T @ w @ xi
 
         delta_x = get_delta_x(c, d)
@@ -67,7 +66,7 @@ def direction_isolator(delta: np.ndarray, i: int):
     return m @ delta
 
 
-def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_params: PropParams, n=2) -> np.ndarray:
+def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_params: PropParams) -> np.ndarray:
     """
     dy_dstate() calculates derivatives of the prediction function per state vector and returns a matrix where each
     element is the column corresponds to an element of the prediction function output and the row corresponds
@@ -77,19 +76,18 @@ def dy_dstate(x: np.ndarray, delta: np.ndarray, observation: Observation, prop_p
     :param delta: variation in position/velocity to be used in derivatives
     :param observation: Observational parameters, passed directly to Ffun0(
     :param prop_params: Propagation parameters, passed directly to propagate()
-    :param n: number of elements in prediction function output
     :return: Matrix of derivatives of the prediction function in position/velocity space
     """
     m = len(x)
-
+    n = len(observation.obs_values)
     a = np.zeros((n, m))
     for j in range(0, m):
         temp1 = state_propagate(x + direction_isolator(delta, j), observation.epoch, prop_params)
         temp2 = state_propagate(x - direction_isolator(delta, j), observation.epoch, prop_params)
-        temp3 = (y(temp1, observation) - y(temp2, observation))
+        temp3 = (y(temp1, observation) - y(temp2, observation)) / (2 * delta[j])
 
         for i in range(0, n):
-            a[i][j] = temp3[i] / (2 * delta[i])
+            a[i][j] = temp3[i]
     return a
 
 

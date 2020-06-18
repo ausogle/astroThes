@@ -3,6 +3,7 @@ import math
 from src.dto import PropParams
 from src.state_propagator import state_propagate
 from src.constants import mu
+import astropy.units as u
 
 
 def generate_earth_surface():
@@ -53,12 +54,11 @@ def get_e(x):
     return e
 
 
-def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
-    t = np.arange(0, tf, dt)
-    r = np.zeros((len(t), 3))
-    prop_params = PropParams(dt, epoch)
-    for i in range(0, len(t)):
+def get_satellite_position_over_time(x, epoch, n, dt) -> np.matrix:
+    r = np.zeros((n, 3))
+    prop_params = PropParams(epoch)
+    for i in range(0, n):
         r[i] = x[0:3]
-        x = state_propagate(x, prop_params)
-        prop_params.epoch = prop_params.epoch + prop_params.dt
+        x = state_propagate(x, prop_params.epoch + dt * u.s, prop_params)
+        prop_params.epoch = prop_params.epoch + dt * u.s
     return r

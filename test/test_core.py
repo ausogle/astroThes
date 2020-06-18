@@ -20,7 +20,8 @@ def test_derivative():
     delta = np.array([1, 2, 3, 4, 5, 6])
     dt = 1
     epoch_obs = None
-    observation = Observation(None, None, epoch_obs, None, None)
+    obs_values = [0, 0, 0]
+    observation = Observation(None, None, epoch_obs, obs_values, None)
     params = None
     with patch(mockito.invocation.MatchingInvocation.compare, xcompare):
         when(core).state_propagate(np.array([11, 20, 30, 40, 50, 60]), epoch_obs, params).thenReturn(np.array([11, 20, 30, 40, 50, 60]))

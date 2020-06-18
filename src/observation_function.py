@@ -2,22 +2,23 @@ import numpy as np
 import numpy.linalg as la
 from src.dto import Observation
 from src.enums import Frames
-from src.interface.cleaning import convert_obs_from_lla_to_eci
+from src.frames import lla_to_ecef, eci_to_ecef
 from src.interface.local_angles import local_angles
 
 
 def y(x: np.ndarray, observation: Observation):
     """
     This function serves as a prediction function. It is used to describe the right ascension and declination of an
-    observed satellite from an observer. Math is done in ECI Frame
+    observed satellite from an observer. Math is done in ECEF Frame
     :param x: State Vector of satellite in ECI frame.
     :param observation: Parameters relevant to observation. Includes epoch, frame, and location of observation/observer.
     """
     r_obj = x[0:3]
     assert observation.frame == Frames.LLA
     pos_lla = observation.position
-    r_obs = convert_obs_from_lla_to_eci(observation)
-    rr = r_obj - r_obs
+    observer_ecef = lla_to_ecef(pos_lla)
+    sat_ecef = eci_to_ecef(r_obj, observation.epoch)
+    rr = sat_ecef - observer_ecef
     azimuth, elevation = local_angles(rr, pos_lla)
     range = la.norm(rr)
     return np.array([range, azimuth, elevation])

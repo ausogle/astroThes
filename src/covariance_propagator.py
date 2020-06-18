@@ -39,8 +39,6 @@ def dx_dx0(x: np.ndarray, epoch_t: Time, prop_params: PropParams, delta: np.ndar
     for j in range(0, n):
         temp1 = state_propagate(x + direction_isolator(delta, j), epoch_t, prop_params)
         temp2 = state_propagate(x - direction_isolator(delta, j), epoch_t, prop_params)
-        temp3 = temp1 - temp2
-
-        for i in range(0, n):
-            a[i][j] = temp3[i] / (2 * delta[i])
+        temp3 = (temp1 - temp2) / (2 * delta[j])
+        a[:][j] = temp3
     return a
