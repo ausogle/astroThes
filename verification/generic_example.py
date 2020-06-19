@@ -24,7 +24,9 @@ prop_params = PropParams(epoch)
 step = period/32 * u.s
 epochs = build_epochs(epoch, step, 5)
 observations = build_observations(x_true, prop_params, obs_pos, Frames.LLA, epochs)
-x_alg, p = milani(x, observations, prop_params)
+output = milani(x, observations, prop_params)
+x_alg = output.x_out
+p = output.p
 
 print("x alg")
 print(x_alg)

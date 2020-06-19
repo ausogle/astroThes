@@ -4,6 +4,18 @@ from astropy.time import Time
 from src.enums import Angles, Frames
 
 
+class FilterOutput:
+    """
+    Object intended to store all relevant information from the filter.
+    """
+    def __init__(self, x_in, epoch, x_out, delta_x, p):
+        self.x_in = x_in
+        self.epoch = epoch
+        self.x_out = x_out
+        self.delta_x = delta_x
+        self.p = p
+
+
 class Observation:
     """
     Object intended to provide all relevant information to the predictor function.

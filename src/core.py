@@ -1,14 +1,12 @@
 import numpy as np
-from scipy import linalg as la
 from src.observation_function import y
 from src.state_propagator import state_propagate
-from src.dto import Observation, PropParams
+from src.dto import Observation, PropParams, FilterOutput
 from scipy.linalg import solve_banded
-from typing import Tuple, List
+from typing import List
 
 
-def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
-           dr=1, dv=.05, max_iter=15) -> Tuple[np.ndarray, np.ndarray]:
+def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams, dr=1, dv=.05, max_iter=15) -> FilterOutput:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
@@ -24,13 +22,17 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     """
 
     n = len(x)
+    x_in = x - np.zeros(6)
     delta = np. array([dr, dr, dr, dv, dv, dv])
-    delta_x = np.ones(n)  # Must break the stopping criteria
+    delta_x = np.ones(n)
+    rms_old = 1e10                  #Following two definitions must break loop for first two iterations
+    rms_new = 1e8
 
     i = 0
-    while not stopping_criteria(delta_x) and i < max_iter:
+    while not stopping_criteria(rms_new, rms_old) and i < max_iter:
         c = np.zeros((n, n))
         d = np.zeros(n)
+        rms_old = rms_new - 0
         for observation in observations:
             ypred = y(state_propagate(x, observation.epoch, prop_params), observation)
             yobs = observation.obs_values
@@ -43,13 +45,16 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
         delta_x = get_delta_x(c, d)
         xnew = x + delta_x
         x = xnew - np.zeros(n)
+        rms_new = np.sqrt((xi.T @ w @ xi)/n)
         i = i+1
 
     p = get_inverse(c)
-    covariance_residual = la.norm(p @ c - np.eye(6))
-    print("Covariance Residual")
-    print(covariance_residual)
-    return xnew, p
+    # covariance_residual = la.norm(p @ c - np.eye(6))
+    # print("Covariance Residual")
+    # print(covariance_residual)
+
+    output = FilterOutput(x_in, prop_params.epoch, x, delta_x, p)
+    return output
 
 
 def direction_isolator(delta: np.ndarray, i: int):
@@ -109,9 +114,14 @@ def get_delta_x(a: np.matrix, b: np.ndarray, upper=5, lower=5) -> np.ndarray:
 
 
 def get_inverse(c: np.ndarray):
+    """
+    Inverts C matrix using banded solver.
+
+    :param c: Normal matrix required to invert for covariance matrix
+    """
     inv = get_delta_x(c, np.eye(6))
-    residual = c @ inv - np.eye(6)
-    print(np.linalg.norm(residual))
+    # residual = c @ inv - np.eye(6)
+    # print(np.linalg.norm(residual))
     return inv
 
 
@@ -142,18 +152,17 @@ def diagonal_form(a: np.matrix, upper=5, lower=5) -> np.matrix:
     return ab
 
 
-def stopping_criteria(delta_x: np.ndarray, rtol=1e-6, vtol=1e-9) -> bool:
+def stopping_criteria(rms_new: float, rms_old: float, tol=1e-1) -> bool:
     """
     Determines whether or not the algorithm can stop. Currently evaluates against arbitrary conditions. To fully
     integrate rtol and vtol into code, they need to be included in one of the params objects. Tests if the position and
     velocity are within a certain distance of the previous iteration. Assuming with each step we get closer, this
     implies we were within the specified tolerances supplied, or assumed above.
 
-    :param delta_x: difference in state vector from previous interation
-    :param rtol: tolerance on change in position [km]
-    :param vtol: tolerance on change in velocity [km/s]
-    :return: returns if change is within tolerance
+    :param rms_new: New root mean square from current iteration
+    :param rms_old: Root mean square from previous iteration
+    :param tol: relative tolerance between updates
+    :return: returns if change is within relative tolerance
     """
-    r = np.linalg.norm(delta_x[0:3])
-    v = np.linalg.norm(delta_x[3:6])
-    return r < rtol and v < vtol
+    percent_diff = np.abs((rms_old - rms_new)/rms_old)
+    return percent_diff < tol
