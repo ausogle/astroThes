@@ -93,7 +93,7 @@ def get_local_angles_for_state_propagation(x: np.ndarray, prop_params: PropParam
         desired_epoch = epoch_i + dt * i
         obs_pos_eci = ecef_to_eci(obs_pos_ecef, desired_epoch)
         obj_pos_eci = state_propagate(x, desired_epoch, prop_params)
-        rr = obj_pos_eci - obs_pos_eci
+        rr = obj_pos_eci[0:3] - obs_pos_eci
         angles = local_angles(rr, obs_pos_lla)
         output.append([angles[0], angles[1], desired_epoch])
     return output
