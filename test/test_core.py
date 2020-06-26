@@ -5,6 +5,8 @@ from mockito import when, patch
 import pytest
 import numpy as np
 from test import xcompare
+from astropy.time import Time
+import astropy.units as u
 
 
 def test_direction_isolator():
@@ -52,10 +54,9 @@ def test_derivative():
         assert np.array_equal(theoretical, experimental)
 
 
-@pytest.mark.parametrize("delta_x, rtol, vtol, expected", [(np.array([1, 2, 3, 4, 5, 6]), 10, 10, True),
-                                                           (np.array([1, 2, 3, 4, 5, 6]), 1, 1, False)])
-def test_stopping_criteria(delta_x, rtol, vtol, expected):
-    result = stopping_criteria(delta_x, rtol=rtol,  vtol=vtol)
+@pytest.mark.parametrize("rms_new, rms_old, tol, expected", [(0, 10, 1, True), (10, 1, 1, False), (1, 10, 1, True)])
+def test_stopping_criteria(rms_new, rms_old, tol, expected):
+    result = stopping_criteria(rms_new, rms_old, tol=tol)
     assert result == expected
 
 
@@ -85,3 +86,34 @@ def test_get_delta_x():
     x = solve_banded((1, 2), ab, b)
     residual = a @ x - b
     assert np.allclose(residual, np.zeros((6, 1)))
+
+
+def test_milani():
+    epoch = Time(2454283.0, format="jd", scale="tdb")
+    epoch_obs = epoch + 1 * u.day
+    obs_val = np.array([1, 1])
+    obs = Observation(None, None, epoch_obs, obs_val, None)
+    x = np.array([1, 2, 3, 4, 5, 6])
+    params = PropParams(epoch)
+    dr = 1
+    dv = 2
+    b = np.ones((2, 6))
+
+    expected = FilterOutput(x, params.epoch, x, np.zeros(6), np.eye(6))
+    with patch(mockito.invocation.MatchingInvocation.compare, xcompare):
+        when(core).state_propagate(x, epoch_obs, params).thenReturn(np.ones(6))
+        when(core).y(np.ones(6), obs).thenReturn(np.zeros(2))
+        when(core).dy_dstate(x, np. array([dr, dr, dr, dv, dv, dv]), obs, params).thenReturn(b)
+        when(core).get_delta_x(b.T @ b, b.T @ obs_val).thenReturn(np.zeros(6))
+        when(core).stopping_criteria(1e8, 1e10).thenReturn(False)
+        when(core).stopping_criteria(np.sqrt(obs_val.T @ obs_val/6), 1e8).thenReturn(True)
+        when(core).get_inverse(b.T @ b).thenReturn(np.eye(6))
+        actual = milani(x, [obs], params, dr=dr, dv=dv)
+
+    assert actual.epoch == expected.epoch
+    assert np.array_equal(actual.x_in, expected.x_in)
+    assert np.array_equal(actual.x_out, expected.x_out)
+    assert np.array_equal(actual.delta_x, expected.delta_x)
+    assert np.array_equal(actual.p, expected.p)
+
+

@@ -8,7 +8,7 @@ class FilterOutput:
     """
     Object intended to store all relevant information from the filter.
     """
-    def __init__(self, x_in, epoch, x_out, delta_x, p):
+    def __init__(self, x_in, epoch, x_out, delta_x=np.zeros((6, 1)), p=np.zeros((6, 6))):
         self.x_in = x_in
         self.epoch = epoch
         self.x_out = x_out

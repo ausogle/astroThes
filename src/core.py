@@ -6,7 +6,8 @@ from scipy.linalg import solve_banded
 from typing import List
 
 
-def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams, dr=1, dv=.05, max_iter=15) -> FilterOutput:
+def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
+           a_priori=FilterOutput(None, None, None), dr=1, dv=.05, max_iter=15) -> FilterOutput:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus
@@ -15,7 +16,8 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     :param x: State vector of the satellite at a time separate from the observation
     :param observations: List of observational objects that capture location, time, and direct observational parameters.
     :param prop_params: Propagation parameters, passed directly to propagate()
-    :param dr: Spatial resolution to be used in derivative function.
+    :param a_priori: Output from a previous iteration
+    :param dr: Spatial resolution to be used in derivative function
     :param dv: Resolution used for velocity in derivative function
     :param max_iter: Maximum number of iterations for Least Squares filter
     :return: A more accurate state vector at the same time as original description, not observation
@@ -42,13 +44,17 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
             b = dy_dstate(x, delta, observation, prop_params)
             c += b.T @ w @ b
             d += b.T @ w @ xi
-        delta_x = get_delta_x(c, d)
+        if np.array_equal(a_priori.p, np.zeros((6, 6))):
+            delta_x = get_delta_x(c, d)
+        else:
+            l = get_inverse(a_priori.p)
+            delta_x = get_delta_x(l + c, l @ a_priori.delta_x + d)
         xnew = x + delta_x
         x = xnew - np.zeros(n)
         rms_new = np.sqrt((xi.T @ w @ xi)/n)
         i = i+1
 
-    p = get_inverse(c)
+    p = a_priori.p + get_inverse(c)
     # covariance_residual = la.norm(p @ c - np.eye(6))
     # print("Covariance Residual")
     # print(covariance_residual)
@@ -164,5 +170,7 @@ def stopping_criteria(rms_new: float, rms_old: float, tol=1e-1) -> bool:
     :param tol: relative tolerance between updates
     :return: returns if change is within relative tolerance
     """
+    if rms_new == 0:
+        return True
     percent_diff = np.abs((rms_old - rms_new)/rms_old)
     return percent_diff < tol

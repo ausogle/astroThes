@@ -74,7 +74,7 @@ def get_local_angles_for_state_propagation(x: np.ndarray, prop_params: PropParam
     :param x: State vector at initial epoch
     :param prop_params: Parameters relevant to propagation. Includes initial epoch
     :param epoch_f: Epoch of final desired time
-    :param n: Number of desired points between initial and final epoch
+    :param n: Number of desired points between initial and final epoch (Does not include those two)
     :param obs_location: Observer location. Accepts list for LLA or np.array for ECEF
     :param obs_frame: Frame observer location is in. Accepts Frames.LLA or Frames.ECEF
     """
