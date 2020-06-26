@@ -15,6 +15,18 @@ class FilterOutput:
         self.delta_x = delta_x
         self.p = p
 
+    def tostring(self) -> str:
+        """
+        Converts Filter Output into a string capable of being printed into a file
+        """
+        output_string = "x_in:" + np.array2string(self.x_in, precision=16)
+        self.epoch.format = 'jd'
+        output_string += "\nepoch:" + str(self.epoch.value)
+        output_string += "\nx_out:" + np.array2string(self.x_out, precision=16)
+        output_string += "\ndeta_x:" + np.array2string(self.delta_x, precision=16)
+        output_string += "\np:" + np.array2string(self.p, precision=16)
+        return output_string
+
 
 class Observation:
     """
