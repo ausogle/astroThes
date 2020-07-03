@@ -92,3 +92,10 @@ def build_epochs(epoch, stepsize, steps):
     for i in range(steps):
         epochs.append(epoch + i * stepsize)
     return epochs
+
+
+def build_noisy_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([sigma_theta, sigma_theta]), noise=1/60):
+    observations = build_observations(x, prop_params, obs_pos, frame, epochs, sigmas)
+    for obs in observations:
+        obs.obs_values = obs.obs_values + np.random.rand(2) * noise
+    return observations
