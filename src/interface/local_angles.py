@@ -10,9 +10,8 @@ from astropy.coordinates import Angle
 
 def local_angles(rr: np.ndarray, lla: List) -> np.ndarray:
     """
-    Gives local azimuth and zenith angles for a satellite with respect to an observer's position on the Earth. Theta is
-    the zenith angel, measured from directly above. The azimuthal angle is phi, measured from local North, where
-    positive indicates Eastward or clockwise.
+    Gives local azimuth and zenith angles for a satellite with respect to an observer's position on the Earth. Azimuth
+    is measured from local North, where positive indicates Eastward or clockwise.
 
     :param rr: observational difference vector in ECEF frame. Units [km]
     :param lla: List of [lat, long, altitude]. Units [deg, deg, km]
@@ -20,10 +19,10 @@ def local_angles(rr: np.ndarray, lla: List) -> np.ndarray:
     rot_mat = rotation_matrix(lla[0].value, lla[1].value)
     local_sky = rot_mat.T @ rr
 
-    theta = np.arccos(local_sky[2] / np.linalg.norm(local_sky)) * 180 / np.pi
-    phi = 90 - np.arctan2(-local_sky[0], local_sky[1]) * 180 / np.pi
+    el = 90 - np.arccos(local_sky[2] / np.linalg.norm(local_sky)) * 180 / np.pi
+    az = 90 - np.arctan2(-local_sky[0], local_sky[1]) * 180 / np.pi
 
-    return np.array([theta, phi])
+    return np.array([az, el])
 
 
 def ry(lat: float) -> np.ndarray:
@@ -65,7 +64,7 @@ def rotation_matrix(lat, lon):
     return rz(lon) @ ry(lat)
 
 
-def get_local_angles_for_state_propagation(x: np.ndarray, prop_params: PropParams, epoch_f: Time, n: int,
+def get_local_angles_for_state_propagation(x: np.ndarray, prop_params: PropParams, epoch_i, epoch_f: Time, n: int,
                                            obs_location, obs_frame: Frames):
     """
     This function returns a list of [theta, phi, Time] from initial epoch in prop_params to final epoch, with an
@@ -86,8 +85,7 @@ def get_local_angles_for_state_propagation(x: np.ndarray, prop_params: PropParam
         obs_pos_lla = ecef_to_lla(obs_location)
         obs_pos_ecef = obs_location
 
-    epoch_i = prop_params.epoch
-    dt = (epoch_f - epoch_i)/ (n+1)
+    dt = (epoch_f - epoch_i) / (n+1)
     output = []
     for i in range(0, n + 2):
         desired_epoch = epoch_i + dt * i
