@@ -15,7 +15,7 @@ x_guess = np.array([5975.2904, 2568.6400, 3120.5845, 3.983846, -2.071159, -5.917
 x_expected = np.array([5748.6011, 2679.7287, 3443.0073, 4.330462, -1.922862, -5.726564])
 epoch_i = Time(2449746.610150, format="jd", scale="utc")
 
-obs_pos = [21.571831046 * u.deg, -158.2761 * u.deg, 3.9624 * u.km]     #Kaena Point, except 13 feet above sea level
+obs_pos = [21.57 * u.deg, -158.28 * u.deg, .3002 * u.km]
 obs_sigmas = np.array([.0925, .0224, .0139])
 epoch_obs1 = Time('1995-1-29T02:38:37', format='isot', scale='utc')
 obs1 = Observation(obs_pos, Frames.LLA, epoch_obs1 + 0 * u.s, np.array([2047.502, 60.4991, 16.1932]), Angles.Local, obs_sigmas)
