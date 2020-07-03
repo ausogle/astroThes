@@ -68,5 +68,5 @@ def test_get_local_angles_for_state_prop():
         when(la).state_propagate(x, epoch_f, params).thenReturn(mocked_state2)
         when(la).local_angles(mocked_state1[0:3], obs_pos_lla).thenReturn(mocked_angles1)
         when(la).local_angles(mocked_state2[0:3], obs_pos_lla).thenReturn(mocked_angles2)
-        actual = get_local_angles_for_state_propagation(x, params, epoch_f, n, obs_pos_lla, obs_frame)
+        actual = get_local_angles_via_state_propagation(x, params, epoch_f, n, obs_pos_lla, obs_frame)
     assert actual == expected

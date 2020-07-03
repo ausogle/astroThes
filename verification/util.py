@@ -76,6 +76,7 @@ sigma_theta = .003
 def build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([sigma_theta, sigma_theta])):
     output = []
     temp = []
+    assert frame == Frames.LLA
     for k in range(len(epochs)):
         epoch = epochs[k]
         x_k = state_propagate(x, epoch, prop_params)
