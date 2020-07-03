@@ -19,7 +19,7 @@ def local_angles(rr: np.ndarray, lla: List) -> np.ndarray:
     rot_mat = rotation_matrix(lla[0].value, lla[1].value)
     local_sky = rot_mat.T @ rr
 
-    el = 90 - np.arccos(local_sky[2] / np.linalg.norm(local_sky)) * 180 / np.pi
+    el = np.arcsin(local_sky[2] / np.linalg.norm(local_sky)) * 180 / np.pi
     az = 90 - np.arctan2(-local_sky[0], local_sky[1]) * 180 / np.pi
 
     return np.array([az, el])

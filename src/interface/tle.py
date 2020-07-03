@@ -8,6 +8,7 @@ from poliastro.core.angles import nu_to_M
 import astropy.units as u
 from src.constants import mu
 import string
+from astropy.time import Time
 
 
 def tle_to_state(tle_string: str) -> Tuple[np.ndarray, PropParams]:
@@ -19,8 +20,17 @@ def tle_to_state(tle_string: str) -> Tuple[np.ndarray, PropParams]:
     tle_lines = tle_string.strip().splitlines()
     tle = TLE.from_lines(*tle_lines)
     sat = tle.to_orbit()
+
+    epoch_yr = float(tle_lines[1][18:20])
+    epoch_day = float(tle_lines[1][20:32])
+    if epoch_yr < 57:
+        year = 2000 + epoch_yr
+    else:
+        year = 1900 + epoch_yr
+    epoch = Time(year + epoch_day / 365.25, format="decimalyear", scale="utc")
+
     x = np.concatenate([sat.r.value, sat.v.value])
-    prop_params = PropParams(sat.epoch)
+    prop_params = PropParams(epoch)
     return x, prop_params
 
 
@@ -46,12 +56,9 @@ def state_to_tle(tle_string: str, x: np.ndarray, params: PropParams) -> str:
     classification = tle_lines[1][7]
     int_desig = tle_lines[1][9:17]
 
-
-    epoch_value = obj.epoch
-    obj.epoch.format = "decimalyear"
-    epoch_yr_value = np.floor(obj.epoch.value)
-    epoch_year = str(epoch_yr_value)[2:4]
-    epoch_day_value = (obj.epoch.value % 1) * 365.25
+    epoch_value = obj.epoch.decimalyear
+    epoch_year = str(epoch_value)[2:4]
+    epoch_day_value = (epoch_value % 1) * 365.25
     epoch_day = convert_value_to_str(epoch_day_value, 3, 8)
 
     dn_02 = tle_lines[1][33:43]
@@ -61,7 +68,7 @@ def state_to_tle(tle_string: str, x: np.ndarray, params: PropParams) -> str:
     rev_num_i = tle_lines[2][63:68]
     epoch_i = tle.epoch
 
-    inc = convert_value_to_str(obj.inc.to(u.deg).value, 2, 4)
+    inc = convert_value_to_str(obj.inc.to(u.deg).value, 3, 4)
     raan = convert_value_to_str(obj.raan.to(u.deg).value, 3, 4)
     ecc = convert_value_to_str(obj.ecc.value, 1, 7)[2:]
     argp = convert_value_to_str(obj.argp.to(u.deg).value, 3, 4)
@@ -82,7 +89,7 @@ def state_to_tle(tle_string: str, x: np.ndarray, params: PropParams) -> str:
     line0 = name
     line1 = "\n1 " + norad + classification + " " + int_desig + " " + epoch_year + epoch_day + " " + dn_02 \
             + " " + ddn_06 + " " + bstar + " 0 " + set_num
-    line2 = "\n2 " + norad + "  " + inc + " " + raan + " " + ecc + " " + argp + " " + m + " " + n + total_revs
+    line2 = "\n2 " + norad + " " + inc + " " + raan + " " + ecc + " " + argp + " " + m + " " + n + total_revs
     return line0 + line1 + checksum(line1[1:]) + line2 + checksum(line2[1:])
 
 
