@@ -26,14 +26,9 @@ output = milani(x, observations, prop_params)
 x_alg = output.x_out
 p = output.p
 
-print("x alg")
-print(x_alg)
-print("x true")
-print(x_true)
 
 print("State residual")
 print(x_true - x_alg)
 print("Uncertainty")
-print(np.diag(p))
-print("initial offset")
-print(x_offset)
+for val in np.diag(p):
+    print(np.sqrt(val))
