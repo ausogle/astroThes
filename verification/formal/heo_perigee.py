@@ -7,10 +7,11 @@ from astropy.time import Time
 import astropy.units as u
 from verification.util import get_period
 
-r = [-27828.9136, -31685.0220, 3.5110]
-v = [2.3098, -2.0286, -.0019]
+
+r = [6600, 0, 0]
+v = [0, 10, 0]
 x = np.array([r[0], r[1], r[2], v[0], v[1], v[2]])
-x_offset = np.array([5000, 1000, 1000, .2, .2, .01])
+x_offset = np.array([500, 100, 100, .2, .2, .1])
 x_true = x + x_offset
 period = get_period(x)
 dt = period / 100
