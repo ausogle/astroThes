@@ -26,9 +26,3 @@ def get_ra_and_dec(rr: np.ndarray) -> np.ndarray:
     alpha = np.arctan2(rr[1], rr[0]) * 180 / np.pi
     dec = 90 - np.arccos(rr[2]/la.norm(rr)) * 180 / np.pi
     return np.array([alpha, dec])
-
-
-
-
-
-

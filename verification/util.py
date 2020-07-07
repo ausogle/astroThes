@@ -3,7 +3,7 @@ import math
 from src.dto import PropParams, Observation
 from src.enums import Angles, Frames
 from src.state_propagator import state_propagate
-from src.frames import lla_to_ecef, ecef_to_eci
+from src.frames import lla_to_ecef, ecef_to_eci, eci_to_eci_angles, eci_to_icrs_angles
 from src.observation_function import y
 from src.constants import mu
 import astropy.units as u
@@ -73,7 +73,7 @@ def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
 sigma_theta = .003
 
 
-def build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([sigma_theta, sigma_theta])):
+def build_y_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([sigma_theta, sigma_theta])):
     output = []
     temp = []
     assert frame == Frames.LLA
@@ -87,6 +87,28 @@ def build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([
     return output
 
 
+def build_eci_observations(x, prop_params, obs_pos, frame, epochs):
+    output = []
+    assert frame == Frames.LLA
+    for k in range(len(epochs)):
+        epoch = epochs[k]
+        x_k = state_propagate(x, epoch, prop_params)
+        pos = ecef_to_eci(lla_to_ecef(obs_pos), epoch)
+        output.append(eci_to_eci_angles(x_k[0:3] - pos, epoch))
+    return output
+
+
+def build_icrs_observations(x, prop_params, obs_pos, frame, epochs):
+    output = []
+    assert frame == Frames.LLA
+    for k in range(len(epochs)):
+        epoch = epochs[k]
+        x_k = state_propagate(x, epoch, prop_params)
+        pos = ecef_to_eci(lla_to_ecef(obs_pos), epoch)
+        output.append(eci_to_icrs_angles(x_k[0:3] - pos, epoch))
+    return output
+
+
 def build_epochs(epoch, stepsize, steps):
     epochs = []
     for i in range(steps):
@@ -95,7 +117,7 @@ def build_epochs(epoch, stepsize, steps):
 
 
 def build_noisy_observations(x, prop_params, obs_pos, frame, epochs, noise=1/60):
-    observations = build_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([noise, noise]))
+    observations = build_y_observations(x, prop_params, obs_pos, frame, epochs, sigmas=np.array([noise, noise]))
     for obs in observations:
         obs.obs_values = obs.obs_values + np.random.rand(2) * noise
     return observations

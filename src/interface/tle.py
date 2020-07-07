@@ -66,7 +66,14 @@ def state_to_tle(tle_string: str, x: np.ndarray, params: PropParams) -> str:
     bstar = tle_lines[1][53:61]
     set_num = tle_lines[1][64:68]
     rev_num_i = tle_lines[2][63:68]
-    epoch_i = tle.epoch
+
+    epoch_i_yr = float(tle_lines[1][18:20])
+    epoch_i_d = float(tle_lines[1][20:32])
+    if epoch_i_yr < 57:
+        year = 2000 + epoch_i_yr
+    else:
+        year = 1900 + epoch_i_yr
+    epoch_i = Time(year + epoch_i_d / 365.25, format="decimalyear", scale="utc")
 
     inc = convert_value_to_str(obj.inc.to(u.deg).value, 3, 4)
     raan = convert_value_to_str(obj.raan.to(u.deg).value, 3, 4)
@@ -80,10 +87,12 @@ def state_to_tle(tle_string: str, x: np.ndarray, params: PropParams) -> str:
     epoch_f = obj.epoch
     dt = (epoch_f - epoch_i).to(u.s)
     period = 2 * np.pi * np.sqrt((a * a * a) / mu.value)
-    new_revs = int(rev_num_i) + np.floor((dt / period).value)
-    total_revs = convert_value_to_str(new_revs, 5, 0)[0:5]
+    new_revs = np.floor((dt / period).value)
+    total_revs_value = int(rev_num_i) + new_revs
+    total_revs = convert_value_to_str(total_revs_value, 5, 0)[0:5]
 
-    m_value = nu_to_M(obj.nu.to(u.deg), obj.ecc)
+    # m_value = nu_to_M(obj.nu.to(u.deg), obj.ecc)
+    m_value = obj.M.to(u.deg).value
     m = convert_value_to_str(m_value, 3, 4)
 
     line0 = name

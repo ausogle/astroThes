@@ -20,6 +20,7 @@ class Frames(enum.Enum):
     ECI = "ECI"
     ECEF = "ECEF"
     LLA = "LLA"
+    ICRS = "ICRS"
 
 
 class Angles(enum.Enum):
