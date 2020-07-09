@@ -3,8 +3,8 @@ from src.enums import Perturbations
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
-from poliastro.core.perturbations import J2_perturbation, atmospheric_drag, J3_perturbation, radiation_pressure, \
-    third_body
+from poliastro.core.perturbations import J2_perturbation, atmospheric_drag_exponential, J3_perturbation, \
+    radiation_pressure, third_body
 from astropy import units as u
 from astropy.time import Time
 from src.dto import PropParams
@@ -53,8 +53,8 @@ def a_d(t0, state, k, perturbations: Dict):
         fun.append(J2_perturbation(t0, state, k, perturbation.J2, perturbation.R))
     if Perturbations.Drag in perturbations:
         perturbation = perturbations.get(Perturbations.Drag)
-        fun.append(atmospheric_drag(t0, state, k, perturbation.R, perturbation.C_D, perturbation.A, perturbation.m,
-                                    perturbation.H0, perturbation.rho0))
+        fun.append(atmospheric_drag_exponential(t0, state, k, perturbation.R, perturbation.C_D, perturbation.A,
+                                                perturbation.m, perturbation.H0, perturbation.rho0))
     if Perturbations.J3 in perturbations:
         perturbation = perturbations.get(Perturbations.J3)
         fun.append(J3_perturbation(t0, state, k, perturbation.J3, perturbation.R))

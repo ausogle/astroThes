@@ -9,7 +9,8 @@ from src.constants import lunar_period, solar_period
 from poliastro.twobody import Orbit
 from poliastro.twobody.propagation import cowell
 from poliastro.bodies import Earth
-from poliastro.core.perturbations import J2_perturbation, J3_perturbation, atmospheric_drag, third_body, radiation_pressure
+from poliastro.core.perturbations import J2_perturbation, J3_perturbation, atmospheric_drag_exponential, third_body, \
+    radiation_pressure
 from poliastro.constants import H0_earth, rho0_earth, Wdivc_sun
 from astropy import units as u
 from astropy.time import Time
@@ -55,7 +56,8 @@ def test_propagate_with_drag():
     prop_params.add_perturbation(Perturbations.Drag, Drag)
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
-    sat_f = sat_i.propagate(dt, method=cowell, ad=atmospheric_drag, R=R, C_D=C_D, A=A, m=m, H0=H0_earth, rho0=rho0_earth)
+    sat_f = sat_i.propagate(dt, method=cowell, ad=atmospheric_drag_exponential, R=R, C_D=C_D, A=A, m=m, H0=H0_earth,
+                            rho0=rho0_earth)
     x_poli = np.concatenate([sat_f.r.value, sat_f.v.value])
 
     x_custom = state_propagate(x, epoch_obs, prop_params)

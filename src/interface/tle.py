@@ -4,7 +4,6 @@ from src.dto import PropParams
 from typing import Tuple
 from poliastro.bodies import Earth
 from poliastro.twobody import Orbit
-from poliastro.core.angles import nu_to_M
 import astropy.units as u
 from src.constants import mu
 import string
