@@ -17,6 +17,7 @@ from poliastro.bodies import Earth as Earth
 from src.interface.tle_util import parse_decimal, parse_float, m_to_nu, checksum, conv_year, DEG2RAD, RAD2DEG, rev, \
     convert_value_to_str
 from src.constants import mu
+from typing import Tuple
 
 
 @attr.s
@@ -164,6 +165,11 @@ class TLE:
         self.n = (mu.value / (self.a.value ** 3)) ** (1/2)
         self.set_num += 1
 
+        dt = (new_epoch - self.epoch).to(u.s)
+        period = 1/self.n * 86400
+        new_revs = int(dt / period)
+        self.rev_num += new_revs
+
         return self
 
     def to_string(self):
@@ -187,3 +193,10 @@ class TLE:
                 + self.dn_o2 + " " + self.ddn_o6 + " " + self.bstar + " 0 " + set_num
         line2 = "\n2 " + self.norad + " " + inc + " " + raan + " " + ecc + " " + argp + " " + m + " " + n + rev_num
         return line0 + line1 + checksum(line1[1:]) + line2 + checksum(line2[1:])
+
+    def to_state(self) -> Tuple[np.ndarray, Time]:
+        """Converts a TLE into a functional state (ECI) and epoch"""
+        obj = self.to_orbit()
+        x = np.concatenate([obj.r.value, obj.v.value])
+        return x, self.epoch
+
