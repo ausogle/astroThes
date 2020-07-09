@@ -82,7 +82,7 @@ def state_to_tle(tle_string: str, x: np.ndarray, params: PropParams) -> str:
     new_revs = int(rev_num_i) + np.floor((dt / period).value)
     total_revs = convert_value_to_str(new_revs, 5, 0)[0:5]
 
-    m_value = nu_to_M(obj.nu.to(u.deg), obj.ecc)
+    m_value = obj.M.to(u.deg)
     m = convert_value_to_str(m_value, 3, 4)
 
     line0 = name
