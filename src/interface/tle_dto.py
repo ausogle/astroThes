@@ -199,4 +199,3 @@ class TLE:
         obj = self.to_orbit()
         x = np.concatenate([obj.r.value, obj.v.value])
         return x, self.epoch
-
