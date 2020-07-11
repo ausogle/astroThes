@@ -12,10 +12,10 @@ import attr
 import numpy as np
 import astropy.units as u
 from astropy.time import Time
-from poliastro.twobody import Orbit as Orbit
-from poliastro.bodies import Earth as Earth
+from poliastro.twobody import Orbit
+from poliastro.bodies import Earth
 from src.interface.tle_util import parse_decimal, parse_float, m_to_nu, checksum, conv_year, DEG2RAD, RAD2DEG, rev, \
-    convert_value_to_str
+    convert_value_to_str, nu_to_m, ensure_positive_angle
 from src.constants import mu
 from typing import Tuple
 
@@ -88,9 +88,7 @@ class TLE:
     @property
     def a(self):
         """Semi-major axis."""
-        if self._a is None:
-            self._a = (mu.value / self.n.to_value(u.rad / u.s) ** 2) ** (1 / 3) * u.m
-        return self._a
+        return (mu.value / self.n.to_value(u.rad / u.s) ** 2) ** (1 / 3) * u.km
 
     @property
     def epoch(self):
@@ -99,11 +97,14 @@ class TLE:
     @property
     def nu(self):
         """True anomaly."""
-        if self._nu is None:
-            # Make sure the mean anomaly is between -pi and pi
-            m = ((self.m + 180) % 360 - 180) * DEG2RAD
-            self._nu = m_to_nu(m, self.ecc) * RAD2DEG
-        return self._nu
+        thing = self.m
+        m = ((self.m.value + 180) % 360 - 180) * DEG2RAD
+        return m_to_nu(m, self.ecc) * RAD2DEG * u.deg
+
+    @property
+    def period(self):
+        """Period"""
+        return 1/self.n.to(rev / u.s) * rev
 
     @classmethod
     def from_lines(cls, tle_string):
@@ -133,7 +134,7 @@ class TLE:
             ecc=u.Quantity(parse_decimal(line2[26:33]), u.one),
             argp=u.Quantity(float(line2[34:42]), u.deg),
             m=u.Quantity(float(line2[43:51]), u.deg),
-            n=u.Quantity(float(line2[52:63]), rev / u.day),
+            n=u.Quantity(float(line2[51:63]), rev / u.day),
             rev_num=line2[63:68])
 
     def to_orbit(self, attractor=Earth) -> Orbit:
@@ -155,21 +156,21 @@ class TLE:
         r = x[0:3] * u.km
         v = x[3:6] * u.km / u.s
         obj = Orbit.from_vectors(Earth, r, v, epoch=new_epoch)
-        self.epoch_year = round(new_epoch.decimalyear % 100)
-        self.epoch_day = (new_epoch.decimalyear % 1) * 365.25
-        self.inc = obj.inc
-        self.raan = obj.raan
-        self.ecc = obj.ecc
-        self.argp = obj.argp
-        self.m = obj.M
-        self.n = (mu.value / (self.a.value ** 3)) ** (1/2)
-        self.set_num += 1
 
         dt = (new_epoch - self.epoch).to(u.s)
-        period = 1/self.n * 86400
-        new_revs = int(dt / period)
+        delta_m = dt * self.n.to(u.deg / u.s)
+        new_revs = int((self.m + delta_m) / (360 * u.deg))
         self.rev_num += new_revs
 
+        self.epoch_year = int(new_epoch.decimalyear)
+        self.epoch_day = (new_epoch.decimalyear % 1) * 365.25
+        self.inc = ensure_positive_angle(obj.inc)
+        self.raan = ensure_positive_angle(obj.raan)
+        self.ecc = obj.ecc
+        self.argp = ensure_positive_angle(obj.argp)
+        self.m = ensure_positive_angle(nu_to_m(obj.nu, obj.ecc).to(u.deg))
+        self.n = obj.n.to(rev / u.d)
+        self.set_num += 1
         return self
 
     def to_string(self):

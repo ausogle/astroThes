@@ -1,7 +1,7 @@
 import string
 import numpy as np
 import astropy.units as u
-from poliastro.core.angles import M_to_E as _M_to_E, E_to_nu as _E_to_nu
+from poliastro.core.angles import M_to_E, E_to_nu, nu_to_E, E_to_M
 
 DEG2RAD = np.pi / 180.
 RAD2DEG = 180. / np.pi
@@ -44,7 +44,20 @@ def m_to_nu(m, ecc):
     The mean anomaly must be between -π and π radians.
     The eccentricity must be less than 1.
     """
-    return _E_to_nu(_M_to_E(m, ecc), ecc)
+    return E_to_nu(M_to_E(m, ecc), ecc)
+
+
+def nu_to_m(nu, ecc):
+    """Mean anomaly from true anomaly.
+    :param float nu: True anomaly in radians.
+    :param float ecc: Eccentricity.
+    :returns: `nu`, the true anomaly, between -π and π radians.
+
+    **Warning**
+    The mean anomaly must be between -π and π radians.
+    The eccentricity must be less than 1.
+    """
+    return E_to_M(nu_to_E(nu.to(u.rad), ecc), ecc) * u.rad
 
 
 def checksum(line: str) -> str:
@@ -76,8 +89,9 @@ def convert_value_to_str(value, length_before, length_after) -> str:
     :param length_before: Number of characters before the decimal
     :param length_after: Number of characters after the decimal
     """
+    thing = value % 1
     after = round(value % 1, length_after)
-    before = value - after
+    before = round(value - after)
     before_string = str(int(before))
     after_string = str(after)[2:]
     while len(before_string) < length_before:
@@ -86,3 +100,12 @@ def convert_value_to_str(value, length_before, length_after) -> str:
         after_string += "0"
     output = before_string[0:length_before] + "." + after_string[0:length_after]
     return output
+
+
+def ensure_positive_angle(angle):
+    angle = angle.to(u.deg)
+    while angle.value < 0:
+        angle += (360 * u.deg)
+    while angle.value > 360:
+        angle -= (360 * u.deg)
+    return angle
