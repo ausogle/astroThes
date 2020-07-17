@@ -57,17 +57,14 @@ def get_e(x):
     return e
 
 
-def get_satellite_position_over_time(x, epoch, tf, dt) -> np.matrix:
-    t = np.arange(0, tf, dt)            #Units of s. No astropy unit attached, just a scalar
-    r = np.zeros((len(t), 3))
-    prop_params = PropParams(epoch)
+def get_satellite_position_over_time(x, epochs):
+    r = np.zeros((len(epochs), 3))
     r[0] = x[0:3]
-    for i in range(1, len(t)):
-        desired_epoch = epoch + t[i] * u.s
-        x = state_propagate(x, desired_epoch, prop_params)
+    for i in range(1, len(epochs)):
+        params = PropParams(epochs[i])
+        x = state_propagate(x, epochs[i], params)
         r[i] = x[0:3]
-        prop_params.epoch = desired_epoch
-    return r
+    return r, epochs
 
 
 sigma_theta = .003

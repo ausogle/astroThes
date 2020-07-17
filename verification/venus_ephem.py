@@ -1,58 +1,27 @@
-import numpy as np
-import scipy.linalg as la
 from astropy.time import Time
 from astropy.coordinates import solar_system_ephemeris, get_body_barycentric
 import astropy.units as u
 from verification.util import build_observations, build_epochs, get_satellite_position_over_time
-from src.interface.tle_dto import TLE
-from src.enums import Frames
-from src.dto import PropParams
-from src.interface.local_angles import get_local_angles_via_state_propagation
-from src.frames import eci_to_icrs, lla_to_ecef, ecef_to_eci
+from src.interface.local_angles import local_angles
+from src.frames import eci_to_icrs, lla_to_ecef, ecef_to_eci, icrs_to_eci, eci_to_ecef
 from src.observation_function import get_ra_and_dec
 
-
-tle_string = """
-2020-040A
-1 45807U 20040A   20175.61197145 -.00000151  00000-0 -10000-3 0  9992
-2 45807   0.0000 294.5058 0000000 179.9989 70.3936 2.28021460     116
-"""
 obs_pos = [29.218103 * u.deg, -81.031723 * u.deg, 0 * u.km]
-tle = TLE.from_lines(tle_string)
 
-x, epoch = tle.to_state()
-params = PropParams(epoch)
 desired_epoch = Time("2020-07-16T08:00:00.000", format="isot", scale="tdb")
 dt = 1
 tf = 14 * dt * u.h
 epochs = build_epochs(desired_epoch, dt * u.h, round((tf/dt).value))
 
-# obj_eci, epochs = get_satellite_position_over_time(x, epochs)
 for i in range(len(epochs)):
-    # obj = eci_to_icrs(positions[i], epochs[i])
+    # print(epochs[i])
     obs = eci_to_icrs(ecef_to_eci(lla_to_ecef(obs_pos), epochs[1]), epochs[i])
-    # earth = get_body_barycentric('earth', epochs[i]).xyz.to(u.km).value
     venus = get_body_barycentric('venus', epochs[i]).xyz.to(u.km).value
     rr = venus - obs
-    print(get_ra_and_dec(rr))
-    # print(earth)
-    # rr = obj-earth
-    # print(rr)
-    # print(positions[i])
-    # print("norms")
-    # print(la.norm(obj-earth))
-    # print(la.norm(positions[i]))
-
-# observations = build_observations(x, params, obs_pos, Frames.LLA, epochs)
-
-# for obs in observations:
-#     print(obs.obs_values)
-#
-# n = len(epochs)
-# locals = get_local_angles_via_state_propagation(x, params, epoch, epochs[n-1], n-2, obs_pos, Frames.LLA)
-# for local in locals:
-#     local[2].format = 'isot'
-#     print(local)
+    # print(get_ra_and_dec(rr))
+    rr_ecef = eci_to_ecef(icrs_to_eci(rr, epochs[i]), epochs[i])
+    thing = local_angles(rr_ecef, obs_pos)
+    print(thing)
 
 
  # Date__(UT)__HR:MN     R.A.___(ICRF)___DEC R.A._(a-appar)_DEC. Azi_(a-appr)_Elev

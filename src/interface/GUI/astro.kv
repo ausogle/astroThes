@@ -1,0 +1,368 @@
+<MainWindow>:
+    name: "main"
+    state_label: state_label
+    epoch_label: epoch_label
+    params_label: params_label
+    delta_x_apr_label: delta_x_apr_label
+    p_apr_label: p_apr_label
+    p_apr_value: p_apr_value
+    observations_output: observations_output
+
+    FloatLayout:
+        Label:
+            id: state_label
+            text_size: self.size
+            halign: 'left'
+            pos_hint:{"x": .1, "top": 1.1}
+            size_hint:0.6, 0.2
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            id: epoch_label
+            pos_hint:{"x": 0.1, "top":1}
+            size_hint:0.6, 0.2
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            id: params_label
+            pos_hint:{"x": .1, "top":0.90}
+            size_hint:0.6, 0.2
+
+        Button:
+            pos_hint:{"x":0.75, "y": .8}
+            size_hint:0.2,0.1
+            text: "Edit core values"
+            on_release:
+                app.root.current = "addcore"
+                root.manager.transition.direction = "left"
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            id: delta_x_apr_label
+            pos_hint:{"x": 0.1, "y": .6}
+            size_hint:0.6, 0.2
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            id: p_apr_label
+            pos_hint:{"x": .1, "y":0.45}
+            size_hint:0.8, 0.2
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valing: 'middle'
+            id: p_apr_value
+            pos_hint:{"x": .3, "y":0.35}
+            size_hint:0.8, 0.4
+
+        Button:
+            pos_hint:{"x":0.75, "y": .65}
+            size_hint:0.2,0.1
+            text: "Edit a priori values"
+            on_release:
+                app.root.current = "apr"
+                root.manager.transition.direction = "left"
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            pos_hint:{"x": .1, "y":0.25}
+            size_hint:0.2, 0.2
+            text: "Observations:    "
+
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            pos_hint:{"x": .15, "y":0.1}
+            size_hint:0.4, 0.2
+            border_color: 'red'
+            Label:
+                halign: 'left'
+                id: observations_output
+                size_hint_y: None
+                height: self.texture_size[1]
+
+        Button:
+            pos_hint:{"x":0.75, "y": .5}
+            size_hint:0.2,0.1
+            text: "Edit observations"
+            on_release:
+                app.root.current = "obs"
+                root.manager.transition.direction = "left"
+
+        Button:
+            pos_hint:{"x":0.75, "y": 0.35}
+            size_hint:0.2,0.1
+            text: "Clear all values"
+            on_release:
+                root.set_default_values()
+
+        Button:
+            pos_hint:{"x":0.75, "y": 0.2}
+            size_hint:0.2,0.1
+            text: "Run"
+            on_release:
+                root.run_clicked()
+
+
+<AddCoreValues>:
+    name: "core_values"
+    state: state
+    epoch: epoch
+    prop_params: prop_params
+    tle: tle
+
+    FloatLayout:
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.1, "top":0.95}
+            size_hint: 0.1, 0.1
+            text: "state: "
+
+        TextInput:
+            id: state
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "top":0.95}
+            size_hint: 0.6, 0.1
+            hint_text: 'r_x, r_y, r_z, v_x, v_y, v_z'
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.1, "top":0.8}
+            size_hint: 0.1, 0.1
+            text: "epoch: "
+
+        TextInput:
+            id: epoch
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "top":0.8}
+            size_hint: 0.4, 0.1
+            hint_text: 'YYYY-MM-DDTHH:MM:SS.SSS'
+
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.05, "top":0.65}
+            size_hint: 0.15, 0.1
+            text: "Propagation Parameters: "
+
+        TextInput:
+            id: prop_params
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "top":0.65}
+            size_hint: 0.2, 0.1
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.05, "top":0.5}
+            size_hint: 0.15, 0.1
+            text: "TLE: "
+
+        TextInput:
+            id: tle
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: True
+            pos_hint: {"x": 0.2, "top":0.5}
+            size_hint: 0.6, 0.15
+
+        Button:
+            pos_hint:{"x":0.2, "y": 0.1}
+            size_hint:0.6,0.1
+            text: "Update and return to main page"
+            on_release:
+                root.update_values()
+                root.manager.transition.direction = "right"
+
+<AddAPrioriValues>:
+    name: "obs"
+    state: state
+    p_apr: p_apr
+
+    FloatLayout:
+        Label:
+            pos_hint:{"x": 0.1, "top":0.95}
+            size_hint: 0.2, 0.1
+            text: "\u0394 x (a priori): "
+
+        TextInput:
+            id: state
+            font_size: (root.width**2 + root.height**2) / 13**4  / 2
+            multiline: False
+            pos_hint: {"x": 0.3, "y":0.85}
+            size_hint: 0.6, 0.1
+            hint_text: 'r_x, r_y, r_z, v_x, v_y, v_z'
+
+        Label:
+            pos_hint:{"x": 0.1, "top":0.55}
+            size_hint: 0.2, 0.1
+            text: "Covariance (a priori): "
+
+        TextInput:
+            id: p_apr
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: True
+            pos_hint: {"x": 0.4, "y":0.3}
+            size_hint: 0.4, 0.4
+            hint_text: "P11, P12, P13, P14, P15, P16\nP21, P22, P23, P24, P25, P26\nP31, P32, P33, P34, P35, P36\nP41, P42, P43, P44, P45, P46\nP51, P52, P53, P54, P55, P56\nP61, P62, P63, P64, P65, P66"
+
+        Button:
+            pos_hint:{"x":0.55, "y": 0.1}
+            size_hint:0.3,0.1
+            text: "Update and return to main page"
+            on_release:
+                app.root.current = "main"
+                root.update_values()
+                root.manager.transition.direction = "left"
+
+        Button:
+            pos_hint:{"x":0.15, "y": 0.1}
+            size_hint:0.3,0.1
+            text: "Clear values"
+            on_release:
+                app.root.current = "main"
+                root.clear_values()
+                root.manager.transition.direction = "left"
+
+<AddObservation>:
+    name: "obs"
+    obs_pos: obs_pos
+    epoch: epoch
+    ra: ra
+    dec: dec
+    sigma_ra: sigma_ra
+    sigma_dec: sigma_dec
+    observation_output: observation_output
+
+    FloatLayout:
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.1, "y":0.85}
+            size_hint: 0.1, 0.1
+            text: "Observer \nPosition: "
+
+        TextInput:
+            id: obs_pos
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "y":0.85}
+            size_hint: 0.4, 0.1
+            hint_text: "lat [deg], lon [deg], alt [km]"
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.1, "y":0.7}
+            size_hint: 0.1, 0.1
+            text: "Epoch: "
+
+        TextInput:
+            id: epoch
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "y":0.7}
+            size_hint: 0.4, 0.1
+            hint_text: "YYYY-MM-DDTHH:MM:SS.SSS"
+
+        Label:
+            pos_hint:{"x": 0.1, "y":0.55}
+            size_hint: 0.05, 0.1
+            text: "Measurements \n(\u03B1, \u03B4): "
+
+        TextInput:
+            id: ra
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "y":0.55}
+            size_hint: 0.2, 0.1
+            hint_text: "Decimal Degrees"
+
+        TextInput:
+            id: dec
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.42, "y":0.55}
+            size_hint: 0.2, 0.1
+            hint_text: "Decimal Degrees"
+
+        Label:
+            pos_hint:{"x": 0.1, "y":0.4}
+            size_hint: 0.05, 0.1
+            text: "Uncertainties \n(\u03B1, \u03B4): "
+
+        TextInput:
+            id: sigma_ra
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "y":0.4}
+            size_hint: 0.2, 0.1
+            hint_text: "Decimal Degrees"
+
+        TextInput:
+            id: sigma_dec
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.42, "y":0.4}
+            size_hint: 0.2, 0.1
+            hint_text: "Decimal Degrees"
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            pos_hint:{"x": .05, "y":0.25}
+            size_hint:0.2, 0.2
+            text: "Observations:    "
+
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            pos_hint:{"x": .15, "y":0.1}
+            size_hint:0.4, 0.2
+            border_color: 'red'
+            Label:
+                halign: 'left'
+                id: observation_output
+                size_hint_y: None
+                height: self.texture_size[1]
+
+        Button:
+            pos_hint:{"x":0.75, "y": .4}
+            size_hint:0.2,0.1
+            text: "Return to main page"
+            on_release:
+                app.root.current = "main"
+                root.manager.transition.direction = "left"
+
+        Button:
+            pos_hint:{"x":0.75, "y": .6}
+            size_hint:0.2,0.1
+            text: "Clear Observations"
+            on_release:
+                app.root.current = "main"
+                root.clear_observations()
+                root.manager.transition.direction = "left"
+
+        Button:
+            pos_hint:{"x":0.75, "y": .8}
+            size_hint:0.2,0.1
+            text: "Add Observation"
+            on_release:
+                root.add_observation()

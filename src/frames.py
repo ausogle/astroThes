@@ -1,4 +1,4 @@
-from astropy.coordinates import GCRS, ITRS, CartesianRepresentation, EarthLocation
+from astropy.coordinates import GCRS, ITRS, ICRS, CIRS, CartesianRepresentation, EarthLocation
 from astropy import units as u
 from astropy.time import Time
 import numpy as np
@@ -54,3 +54,21 @@ def ecef_to_eci(r: np.ndarray, time: Time) -> np.ndarray:
     y_eci = gcrs.cartesian.y.value
     z_eci = gcrs.cartesian.z.value
     return np.array([x_eci, y_eci, z_eci])
+
+
+def eci_to_icrs(r: np.ndarray, time: Time) -> np.ndarray:
+    gcrs = GCRS(CartesianRepresentation(r[0] * u.km, r[1] * u.km, r[2] * u.km), obstime=time)
+    icrs = gcrs.transform_to(ICRS)
+    x_icrs = icrs.cartesian.x.value
+    y_icrs = icrs.cartesian.y.value
+    z_icrs = icrs.cartesian.z.value
+    return np.array([x_icrs, y_icrs, z_icrs])
+
+
+def icrs_to_eci(r: np.ndarray, time: Time) -> np.ndarray:
+    icrs = ICRS(CartesianRepresentation(r[0] * u.km, r[1] * u.km, r[2] * u.km))
+    gcrs = icrs.transform_to(GCRS)
+    x_gcrs = gcrs.cartesian.x.value
+    y_gcrs = gcrs.cartesian.y.value
+    z_gcrs = gcrs.cartesian.z.value
+    return np.array([x_gcrs, y_gcrs, z_gcrs])
