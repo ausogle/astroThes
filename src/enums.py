@@ -9,8 +9,8 @@ class Perturbations(enum.Enum):
     J3 = "J3"
     Drag = "Drag"
     SRP = "SRP"
-    Moon = "Moon"
-    Sun = "Sun"
+    Moon = "Lunar Gravity"
+    Sun = "Solar Gravity"
 
 
 class Frames(enum.Enum):

@@ -8,7 +8,8 @@ class FilterOutput:
     """
     Object intended to store all relevant information from the filter.
     """
-    def __init__(self, x_in, epoch, x_out, delta_x=np.zeros((6, 1)), p=np.zeros((6, 6))):
+    def __init__(self, x_in=np.zeros(6), epoch=Time("2000-01-01T00:00:00.000", format='isot', scale='utc'),
+                 x_out=np.zeros(6), delta_x=np.zeros(6), p=np.zeros((6, 6))):
         self.x_in = x_in
         self.epoch = epoch
         self.x_out = x_out
@@ -19,12 +20,12 @@ class FilterOutput:
         """
         Converts Filter Output into a string capable of being printed into a file
         """
-        output_string = "x_in:" + np.array2string(self.x_in, precision=16)
+        output_string = "x_in:\t" + np.array2string(self.x_in, precision=16)
         self.epoch.format = 'jd'
-        output_string += "\nepoch:" + str(self.epoch.value)
-        output_string += "\nx_out:" + np.array2string(self.x_out, precision=16)
-        output_string += "\ndeta_x:" + np.array2string(self.delta_x, precision=16)
-        output_string += "\np:" + np.array2string(self.p, precision=16)
+        output_string += "\n\nepoch:\t" + str(self.epoch.value)
+        output_string += "\n\nx_out:\t" + np.array2string(self.x_out, precision=16)
+        output_string += "\n\ndeta_x:\t" + np.array2string(self.delta_x, precision=16)
+        output_string += "\n\np:\t" + np.array2string(self.p, precision=16)
         return output_string
 
 
@@ -40,6 +41,12 @@ class Observation:
         self.obs_sigmas = obs_sigmas
         self.obs_type = obs_type
 
+    def tostring(self):
+        return "[" + self.epoch + ", [" + \
+               str(self.position[0].value) + ", " + str(self.position[1].value) + ", " + str(self.position[2].value) + \
+               "], " + str(self.obs_values[0]) + "\u00B1" + str(self.obs_sigmas[0]) + ", " + \
+               str(self.obs_values[1]) + "\u00B1" + str(self.obs_sigmas[1]) + "]"
+
 
 class PropParams:
     """
@@ -51,6 +58,14 @@ class PropParams:
 
     def add_perturbation(self, name, perturbation):
         self.perturbations[name] = perturbation
+
+    def tostring(self):
+        output = ""
+        for key, value in self.perturbations.items():
+            if output != "":
+                output += ", "
+            output += key.value + ""
+        return output
 
 
 class J2:

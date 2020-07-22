@@ -1,5 +1,5 @@
 import astropy.units as u
-from src.util import *
+from src.perturbation_util import *
 import numpy as np
 from src.frames import lla_to_ecef, ecef_to_lla, ecef_to_eci, eci_to_ecef
 import pytest

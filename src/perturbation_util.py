@@ -22,6 +22,7 @@ def build_lunar_third_body(epoch: Time, rtol=1e-2) -> ThirdBody:
     the Moon does not need to be that accurate.
     :return: Returns callable object that describes the Moon's position
     """
+    epoch.format = "jd"
     k_moon = Moon.k.to(u.km ** 3 / u.s ** 2).value
     body_moon = build_ephem_interpolant(Moon, lunar_period, (epoch.value * u.day,
                                                              epoch.value * u.day + 60 * u.day), rtol=rtol)
@@ -38,6 +39,7 @@ def build_solar_third_body(epoch: Time, rtol=1e-2) -> ThirdBody:
     the Sun does not need to be that accurate.
     :return: Returns callable object that describes the Sun's position
     """
+    epoch.format = "jd"
     k_sun = Sun.k.to(u.km ** 3 / u.s ** 2).value
     body_sun = build_ephem_interpolant(Sun, solar_period, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
@@ -71,6 +73,7 @@ def build_srp(c_r, a, m, epoch, rtol=1e-2) -> SRP:
     rtol=1e-2. A smaller number is not accepted. Could be increased for more accuracy, that being said, the position of
     the Sun does not need to be that accurate.
     """
+    epoch.format = "jd"
     body_sun = build_ephem_interpolant(Sun, 1 * u.year, (epoch.value * u.day, epoch.value * u.day + 60 * u.day),
                                        rtol=rtol)
     return SRP(R, c_r, a, m, Wdivc_sun.value, body_sun)

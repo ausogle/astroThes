@@ -22,25 +22,18 @@ tle = TLE.from_lines(tle_string)
 
 x, epoch = tle.to_state()
 params = PropParams(epoch)
-desired_epoch = Time("2020-07-16T08:00:00.000", format="isot", scale="tdb")
+desired_epoch = Time("2020-06-24T00:00:00.000", format="isot", scale="tdb")
 dt = 1
-tf = 14 * dt * u.h
-epochs = build_epochs(desired_epoch, dt * u.h, round((tf/dt).value))
+epochs = build_epochs(desired_epoch, dt * u.h, 24)
 
 # obj_eci, epochs = get_satellite_position_over_time(x, epochs)
-for i in range(len(epochs)):
+# for i in range(len(epochs)):
     # obj = eci_to_icrs(positions[i], epochs[i])
-    obs = eci_to_icrs(ecef_to_eci(lla_to_ecef(obs_pos), epochs[1]), epochs[i])
-    # earth = get_body_barycentric('earth', epochs[i]).xyz.to(u.km).value
-    venus = get_body_barycentric('venus', epochs[i]).xyz.to(u.km).value
-    rr = venus - obs
-    print(get_ra_and_dec(rr))
-    # print(earth)
-    # rr = obj-earth
+    # obs = eci_to_icrs(ecef_to_eci(lla_to_ecef(obs_pos), epochs[1]), epochs[i])
+    # print(get_ra_and_dec(rr))
     # print(rr)
     # print(positions[i])
     # print("norms")
-    # print(la.norm(obj-earth))
     # print(la.norm(positions[i]))
 
 # observations = build_observations(x, params, obs_pos, Frames.LLA, epochs)
@@ -48,11 +41,11 @@ for i in range(len(epochs)):
 # for obs in observations:
 #     print(obs.obs_values)
 #
-# n = len(epochs)
-# locals = get_local_angles_via_state_propagation(x, params, epoch, epochs[n-1], n-2, obs_pos, Frames.LLA)
-# for local in locals:
-#     local[2].format = 'isot'
-#     print(local)
+n = len(epochs)
+locals = get_local_angles_via_state_propagation(x, params, epochs[0], epochs[n-1], n-2, obs_pos, Frames.LLA)
+for local in locals:
+    local[2].format = 'isot'
+    print(local)
 
 
  # Date__(UT)__HR:MN     R.A.___(ICRF)___DEC R.A._(a-appar)_DEC. Azi_(a-appr)_Elev

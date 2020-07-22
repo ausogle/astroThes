@@ -1,6 +1,6 @@
 import numpy as np
 from src.state_propagator import a_d, state_propagate
-from src.util import build_j2, build_j3, build_basic_drag, build_lunar_third_body, build_solar_third_body, build_srp
+from src.perturbation_util import build_j2, build_j3, build_basic_drag, build_lunar_third_body, build_solar_third_body, build_srp
 from poliastro.ephem import build_ephem_interpolant
 from poliastro.bodies import Moon, Sun
 from astropy.coordinates import solar_system_ephemeris

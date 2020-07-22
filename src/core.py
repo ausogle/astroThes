@@ -7,7 +7,7 @@ from typing import List
 
 
 def milani(x: np.ndarray, observations: List[Observation], prop_params: PropParams,
-           a_priori=FilterOutput(None, None, None), dr=1, dv=.05, max_iter=15) -> FilterOutput:
+           a_priori=FilterOutput(), dr=1, dv=.05, max_iter=15) -> FilterOutput:
     """
     Scheme outlined in Adrea Milani's 1998 paper "Asteroid Idenitification Problem". It is a least-squared psuedo-newton
     approach to improving a objects's orbit description based on differences in object's measurement in the sky versus

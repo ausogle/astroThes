@@ -7,6 +7,7 @@
     p_apr_label: p_apr_label
     p_apr_value: p_apr_value
     observations_output: observations_output
+    tag: tag
 
     FloatLayout:
         Label:
@@ -79,7 +80,7 @@
             do_scroll_x: False
             do_scroll_y: True
             pos_hint:{"x": .15, "y":0.1}
-            size_hint:0.4, 0.2
+            size_hint:0.6, 0.2
             border_color: 'red'
             Label:
                 halign: 'left'
@@ -108,14 +109,40 @@
             text: "Run"
             on_release:
                 root.run_clicked()
+                app.root.current = "results"
+                root.manager.transition.direction = "up"
+
+        Label:
+            id: tag
+            text_size: self.size
+            halign: 'right'
+            pos_hint:{"x": .6, "y": .0}
+            size_hint:0.4, 0.05
+            text: "Developed by Austin Ogle  Ver. 0.0.1  7/17/2020"
 
 
 <AddCoreValues>:
     name: "core_values"
     state: state
     epoch: epoch
-    prop_params: prop_params
     tle: tle
+    is_isot: is_isot
+    is_jd: is_jd
+    tle_active: tle_active
+    include_j2: include_j2
+    include_j3: include_j3
+    include_solar: include_solar
+    include_lunar: include_lunar
+    include_srp: include_srp
+    include_drag: include_drag
+
+    drag_A: drag_A
+    drag_C_d: drag_C_d
+    drag_m: drag_m
+    srp_A: srp_A
+    srp_C_r: srp_C_r
+    srp_m: srp_m
+
 
     FloatLayout:
         Label:
@@ -150,6 +177,38 @@
             size_hint: 0.4, 0.1
             hint_text: 'YYYY-MM-DDTHH:MM:SS.SSS'
 
+        CheckBox:
+            id: is_isot
+            pos_hint: {"x": 0.65, "top":0.8}
+            size_hint: 0.05, 0.05
+            group: "opts"
+            on_active:
+                root.isot_active()
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.7, "top":0.8}
+            size_hint: 0.1, 0.05
+            text: "ISOT"
+
+        CheckBox:
+            id: is_jd
+            pos_hint: {"x": 0.65, "top":0.75}
+            size_hint: 0.05, 0.05
+            group: "opts"
+            on_active:
+                root.jd_active()
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.7, "top":0.75}
+            size_hint: 0.1, 0.05
+            text: "JD"
+
 
         Label:
             text_size: self.size
@@ -157,29 +216,220 @@
             valign: 'middle'
             pos_hint:{"x": 0.05, "top":0.65}
             size_hint: 0.15, 0.1
-            text: "Propagation Parameters: "
+            text: "Included Perturbations: "
 
-        TextInput:
-            id: prop_params
-            font_size: (root.width**2 + root.height**2) / 13**4 / 2
-            multiline: False
+        CheckBox:
+            id: include_j2
             pos_hint: {"x": 0.2, "top":0.65}
-            size_hint: 0.2, 0.1
+            size_hint: 0.05, 0.05
+            on_active:
+                root.j2_active(self.active)
 
         Label:
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-            pos_hint:{"x": 0.05, "top":0.5}
+            pos_hint:{"x": 0.25, "top":0.65}
+            size_hint: 0.1, 0.05
+            text: "J2"
+
+        CheckBox:
+            id: include_j3
+            pos_hint: {"x": 0.2, "top":0.6}
+            size_hint: 0.05, 0.05
+            on_active:
+                root.j3_active(self.active)
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.25, "top":0.6}
+            size_hint: 0.1, 0.05
+            text: "J3"
+
+        CheckBox:
+            id: include_solar
+            pos_hint: {"x": 0.30, "top":0.65}
+            size_hint: 0.05, 0.05
+            on_active:
+                root.solar_active(self.active)
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.35, "top":0.65}
+            size_hint: 0.2, 0.05
+            text: "Solar Gravity"
+
+        CheckBox:
+            id: include_lunar
+            pos_hint: {"x": 0.30, "top":0.6}
+            size_hint: 0.05, 0.05
+            on_active:
+                root.lunar_active(self.active)
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.35, "top":0.6}
+            size_hint: 0.2, 0.05
+            text: "Lunar Gravity"
+
+        CheckBox:
+            id: include_drag
+            pos_hint: {"x": 0.50, "top":0.65}
+            size_hint: 0.05, 0.05
+            on_active:
+                root.drag_active(self.active)
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.55, "top":0.65}
+            size_hint: 0.1, 0.05
+            text: "Drag"
+
+        TextInput:
+            id: drag_A
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.6, "top":0.65}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "Area [m^2]"
+            hint_text_color: [1, 1, 1, 1]
+
+        TextInput:
+            id: drag_C_d
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.72, "top":0.65}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "C_d"
+            hint_text_color: [1, 1, 1, 1]
+
+        TextInput:
+            id: drag_C_d
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.72, "top":0.65}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "C_d"
+            hint_text_color: [1, 1, 1, 1]
+
+        TextInput:
+            id: drag_m
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.84, "top":0.65}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "Mass [kg]"
+            hint_text_color: [1, 1, 1, 1]
+
+
+        CheckBox:
+            id: include_srp
+            pos_hint: {"x": 0.50, "top":0.6}
+            size_hint: 0.05, 0.05
+            on_active:
+                root.srp_active(self.active)
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.55, "top":0.6}
+            size_hint: 0.2, 0.05
+            text: "SRP"
+
+        TextInput:
+            id: srp_A
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.6, "top":0.60}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "Area [m^2]"
+            hint_text_color: [1, 1, 1, 1]
+
+        TextInput:
+            id: srp_C_r
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.72, "top":0.60}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "C_d"
+            hint_text_color: [1, 1, 1, 1]
+
+        TextInput:
+            id: srp_C_r
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.72, "top":0.6}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "C_r"
+            hint_text_color: [1, 1, 1, 1]
+
+        TextInput:
+            id: srp_m
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
+            multiline: False
+            pos_hint: {"x": 0.84, "top":0.60}
+            size_hint: 0.1, 0.05
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "Mass [km]"
+            hint_text_color: [1, 1, 1, 1]
+
+        CheckBox:
+            id: tle_active
+            pos_hint:{"x": 0.2, "top":0.52}
+            size_hint: 0.05, 0.1
+            on_active:
+                root.tle_state(self.active)
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.25, "top":0.52}
+            size_hint: 0.65, 0.1
+            text: "Use TLE input over state and epoch"
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.05, "top":0.4}
             size_hint: 0.15, 0.1
             text: "TLE: "
 
         TextInput:
             id: tle
-            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2.6
             multiline: True
-            pos_hint: {"x": 0.2, "top":0.5}
+            pos_hint: {"x": 0.2, "top":0.4}
             size_hint: 0.6, 0.15
+            readonly: True
+            background_color: .6, .6, .6, 1
+            hint_text: "This box is read only until the checkbox has been activated"
+            hint_text_color: [1, 1, 1, 1]
 
         Button:
             pos_hint:{"x":0.2, "y": 0.1}
@@ -226,45 +476,97 @@
             size_hint:0.3,0.1
             text: "Update and return to main page"
             on_release:
-                app.root.current = "main"
                 root.update_values()
-                root.manager.transition.direction = "left"
+                root.manager.transition.direction = "right"
 
         Button:
             pos_hint:{"x":0.15, "y": 0.1}
             size_hint:0.3,0.1
             text: "Clear values"
+            color: 1, 0, 0, 1
             on_release:
-                app.root.current = "main"
                 root.clear_values()
-                root.manager.transition.direction = "left"
 
 <AddObservation>:
     name: "obs"
-    obs_pos: obs_pos
+    lat: lat
+    lon: lon
+    alt: alt
     epoch: epoch
     ra: ra
     dec: dec
     sigma_ra: sigma_ra
     sigma_dec: sigma_dec
     observation_output: observation_output
+    is_isot: is_isot
+    is_jd: is_jd
+    is_dd: is_dd
+    is_dms: is_dms
 
     FloatLayout:
         Label:
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-            pos_hint:{"x": 0.1, "y":0.85}
+            pos_hint:{"x": 0.08, "y":0.85}
             size_hint: 0.1, 0.1
-            text: "Observer \nPosition: "
+            text: "Observer \n lat, lon, alt: "
 
         TextInput:
-            id: obs_pos
+            id: lat
             font_size: (root.width**2 + root.height**2) / 13**4 / 2
             multiline: False
             pos_hint: {"x": 0.2, "y":0.85}
-            size_hint: 0.4, 0.1
-            hint_text: "lat [deg], lon [deg], alt [km]"
+            size_hint: 0.12, 0.1
+            hint_text: "00.000"
+
+        TextInput:
+            id: lon
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.34, "y":0.85}
+            size_hint: 0.12, 0.1
+            hint_text: "00.000"
+
+        CheckBox:
+            id: is_dd
+            pos_hint: {"x": 0.47, "y":0.90}
+            size_hint: 0.05, 0.05
+            group: "latlon"
+            on_active:
+                root.dd_active()
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.52, "y":0.90}
+            size_hint: 0.1, 0.05
+            text: "DD"
+
+        CheckBox:
+            id: is_dms
+            pos_hint: {"x": 0.47, "y":0.85}
+            size_hint: 0.05, 0.05
+            group: "latlon"
+            on_active:
+                root.dms_active()
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.52, "y":0.85}
+            size_hint: 0.1, 0.05
+            text: "DMS"
+
+        TextInput:
+            id: alt
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.6, "y":0.85}
+            size_hint: 0.1, 0.1
+            hint_text: "[km]"
 
         Label:
             text_size: self.size
@@ -281,6 +583,38 @@
             pos_hint: {"x": 0.2, "y":0.7}
             size_hint: 0.4, 0.1
             hint_text: "YYYY-MM-DDTHH:MM:SS.SSS"
+
+        CheckBox:
+            id: is_isot
+            pos_hint: {"x": 0.62, "y":0.75}
+            size_hint: 0.05, 0.05
+            group: "opts"
+            on_active:
+                root.isot_active()
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.67, "y":0.75}
+            size_hint: 0.1, 0.05
+            text: "ISOT"
+
+        CheckBox:
+            id: is_jd
+            pos_hint: {"x": 0.62, "y":0.7}
+            size_hint: 0.05, 0.05
+            group: "opts"
+            on_active:
+                root.jd_active()
+
+        Label:
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+            pos_hint:{"x": 0.67, "y":0.7}
+            size_hint: 0.1, 0.05
+            text: "JD"
 
         Label:
             pos_hint:{"x": 0.1, "y":0.55}
@@ -334,8 +668,8 @@
         ScrollView:
             do_scroll_x: False
             do_scroll_y: True
-            pos_hint:{"x": .15, "y":0.1}
-            size_hint:0.4, 0.2
+            pos_hint:{"x": .2, "y":0.1}
+            size_hint:0.75, 0.2
             border_color: 'red'
             Label:
                 halign: 'left'
@@ -349,16 +683,15 @@
             text: "Return to main page"
             on_release:
                 app.root.current = "main"
-                root.manager.transition.direction = "left"
+                root.manager.transition.direction = "right"
 
         Button:
             pos_hint:{"x":0.75, "y": .6}
             size_hint:0.2,0.1
             text: "Clear Observations"
+            color: 1, 0, 0, 1
             on_release:
-                app.root.current = "main"
                 root.clear_observations()
-                root.manager.transition.direction = "left"
 
         Button:
             pos_hint:{"x":0.75, "y": .8}
@@ -366,3 +699,35 @@
             text: "Add Observation"
             on_release:
                 root.add_observation()
+
+<ResultsScreen>:
+    output_text: output_text
+
+    FloatLayout:
+        Label:
+            pos_hint:{"x": 0.1, "y":0.8}
+            size_hint: 0.1, 0.1
+            text: "Output: "
+
+        TextInput:
+            id: output_text
+            font_size: (root.width**2 + root.height**2) / 13**4 / 2
+            multiline: False
+            pos_hint: {"x": 0.2, "top":0.85}
+            size_hint: 0.6, 0.6
+
+        Button:
+            pos_hint:{"x": 0.2, "y":0.1}
+            size_hint: 0.28, 0.1
+            text: "Return to main page"
+            on_release:
+                app.root.current = "main"
+                root.manager.transition.direction = "down"
+
+        Button:
+            pos_hint:{"x": 0.52, "y":0.1}
+            size_hint: 0.28, 0.1
+            text: "Reset Field"
+            on_release:
+                root.on_enter()
+
