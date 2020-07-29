@@ -10,8 +10,9 @@ import numpy as np
 from src.interface.tle_dto import TLE
 from src.dto import PropParams, FilterOutput
 from src.perturbation_util import *
-from src.enums import Perturbations
+from src.enums import Perturbations, Frames, Angles
 from src.interface.string_conversions import dms_to_dd
+from src.interface.cleaning import convert_obs_from_lla_to_eci
 from src.core import milani
 
 tag_string = "Developed by Austin Ogle  Ver. 0.0.1  7/20/2020"
@@ -29,9 +30,9 @@ class MainWindow(Screen):
 
     def on_enter(self, *args):
         self.tag.text = tag_string
-
         self.state_label.text = "Satellite state:    " + str(self.state)
         self.epoch_label.text = "Epoch: " + self.epoch.fits
+        self.prop_params.epoch = self.epoch
         self.params_label.text = "Included Perturbations: " + self.prop_params.tostring()
         self.delta_x_apr_label.text = "A priori \u0394 x:    " + str(self.delta_x_apr)
         self.p_apr_label.text = "A priori covariance:    "
@@ -49,10 +50,17 @@ class MainWindow(Screen):
         self.on_enter()
 
     def run_clicked(self):
-        # a_priori = FilterOutput(delta_x=self.delta_x_apr, p=self.p_apr)
-        # output = milani(self.state, self.observations, self.prop_params, a_priori)
-        # sm.get_screen("results").output = output
-        print("hi")
+        obs_pos = [29.218103 * u.deg, -81.031723 * u.deg, 0 * u.km]
+        uncert = np.array([.1, .1])
+        obs_1 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:00:00.000", format="isot", scale="utc"), np.array([101.4555789, 32.40327788]), Angles.Celestial, uncert)
+        # obs_2 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:05:00.000", format="isot", scale="utc"), np.array([108.7213437, 8.01066546]), Angles.Celestial, uncert)
+        # obs_3 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:10:00.000", format="isot", scale="utc"), np.array([106.73201136, -6.72670735]), Angles.Celestial, uncert)
+        # obs_4 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:15:00.000", format="isot", scale="utc"), np.array([101.601932121, -17.24402305]), Angles.Celestial, uncert)
+        # self.observations = [convert_obs_from_lla_to_eci(obs_1), convert_obs_from_lla_to_eci(obs_2),
+        #                      convert_obs_from_lla_to_eci(obs_3), convert_obs_from_lla_to_eci(obs_4)]
+        self.observations = [convert_obs_from_lla_to_eci(obs_1)]
+        a_priori = FilterOutput(delta_x=self.delta_x_apr, p=self.p_apr)
+        sm.get_screen("results").output = milani(self.state, self.observations, PropParams(self.epoch), a_priori)
 
 
 class AddCoreValues(Screen):
@@ -116,10 +124,10 @@ class AddCoreValues(Screen):
                 sm.get_screen('main').prop_params.add_perturbation(Perturbations.Moon, build_lunar_third_body(epoch))
             else:
                 invalid_entry("Ensure epoch meets expected format")
-                self.include_solar.active = False
+                self.include_lunar.active = False
         else:
             try:
-                del sm.get_screen('main').prop_params.perturbations[Perturbations.Sun]
+                del sm.get_screen('main').prop_params.perturbations[Perturbations.Moon]
             except KeyError:
                 thing = "Hih"
 
@@ -187,11 +195,20 @@ class AddCoreValues(Screen):
             self.tle.readonly = False
             self.tle.background_color = [1, 1, 1, 1]
             self.tle.hint_text = ""
+            self.state.background_color = [.6, .6, .6, 1]
+            self.epoch.background_color = [.6, .6, .6, 1]
+            self.state.readonly = True
+            self.epoch.readonly = True
+
         else:
             self.tle.readonly = True
             self.tle.background_color = [.6, .6, .6, 1]
             self.tle.hint_text = "This box is read only until the checkbox has been activated"
             self.tle.hint_text_color = [1, 1, 1, 1]
+            self.state.background_color = [1, 1, 1, 1]
+            self.epoch.background_color = [1, 1, 1, 1]
+            self.state.readonly = False
+            self.epoch.readonly = False
 
     def isot_active(self):
         self.epoch.hint_text = "YYYY-MM-DDTHH:MM:SS.SSS"
@@ -265,6 +282,8 @@ class AddAPrioriValues(Screen):
     def clear_values(self):
         sm.get_screen('main').delta_x_apr = np.zeros(6)
         sm.get_screen('main').p_apr = np.zeros((6, 6))
+        self.p_apr.text = ""
+        self.state.text = ""
 
     def validate_values(self):
         if self.state.text == "" and self.p_apr.text == "":
@@ -315,9 +334,9 @@ class AddObservation(Screen):
                               None, np.array([float(self.sigma_ra.text), float(self.sigma_dec.text)]))
             sm.get_screen('main').observations.append(obs)
             self.clear_values()
-        self.observation_output.text = ""
-        for observation in sm.get_screen('main').observations:
-            self.observation_output.text += observation.tostring() + "\n"
+            self.observation_output.text = ""
+            for observation in sm.get_screen('main').observations:
+                self.observation_output.text += observation.tostring() + "\n"
 
     def clear_observations(self):
         sm.get_screen('main').observations = []
@@ -399,6 +418,9 @@ class ResultsScreen(Screen):
 
     def on_enter(self, *args):
         self.output_text.text = self.output.tostring()
+        if sm.get_screen('addcore').tle_active.active is True:
+            updated_tle = TLE.from_lines(sm.get_screen("addcore").tle.text).update(self.output.x_out, self.output.epoch)
+            self.output_text.text += "\n\n" + updated_tle.to_string()
 
 
 def invalid_entry(string):

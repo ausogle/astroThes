@@ -65,6 +65,13 @@ def eci_to_icrs(r: np.ndarray, time: Time) -> np.ndarray:
     return np.array([x_icrs, y_icrs, z_icrs])
 
 
+def eci_to_angles(r: np.ndarray, time: Time) -> np.ndarray:
+    gcrs = GCRS(CartesianRepresentation(r[0] * u.km, r[1] * u.km, r[2] * u.km), obstime=time)
+    ra = gcrs.ra.value
+    dec = gcrs.dec.value
+    return np.array([ra, dec])
+
+
 def icrs_to_eci(r: np.ndarray, time: Time) -> np.ndarray:
     icrs = ICRS(CartesianRepresentation(r[0] * u.km, r[1] * u.km, r[2] * u.km))
     gcrs = icrs.transform_to(GCRS)

@@ -34,8 +34,10 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     while not stopping_criteria(rms_new, rms_old) and i < max_iter:
         c = np.zeros((n, n))
         d = np.zeros(n)
+        print(i)
         rms_old = rms_new - 0
         for observation in observations:
+            print(i)
             ypred = y(state_propagate(x, observation.epoch, prop_params), observation)
             yobs = observation.obs_values
             xi = yobs - ypred

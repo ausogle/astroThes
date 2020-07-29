@@ -8,7 +8,7 @@ from src.interface.tle_dto import TLE
 from src.enums import Frames
 from src.dto import PropParams
 from src.interface.local_angles import get_local_angles_via_state_propagation
-from src.frames import eci_to_icrs, lla_to_ecef, ecef_to_eci
+from src.frames import eci_to_icrs, lla_to_ecef, ecef_to_eci, eci_to_angles
 from src.observation_function import get_ra_and_dec
 
 
@@ -26,11 +26,14 @@ desired_epoch = Time("2020-07-20T00:00:00.000", format="isot", scale="utc")
 dt = 1
 epochs = build_epochs(desired_epoch, dt * u.h, 48)
 
-obj_eci, epochs = get_satellite_position_over_time(x, epochs)
-# for i in range(len(epochs)):
+obj_eci, epochs = get_satellite_position_over_time(x, epoch, epochs)
+for i in range(len(epochs)):
+    # print(epochs[i])
+    print(eci_to_angles(obj_eci[i], epochs[i]))
     # obj = eci_to_icrs(obj_eci[i], epochs[i])
     # obs = eci_to_icrs(ecef_to_eci(lla_to_ecef(obs_pos), epochs[1]), epochs[i])
     # rr = obj - obs
+    # print(rr)
     # print(get_ra_and_dec(rr))
     # print(rr)
     # print(positions[i])
@@ -42,12 +45,12 @@ obj_eci, epochs = get_satellite_position_over_time(x, epochs)
 # for obs in observations:
 #     print(obs.obs_values)
 #
-n = len(epochs)
-locals = get_local_angles_via_state_propagation(x, params, epochs[0], epochs[n-1], n-2, obs_pos, Frames.LLA)
-for local in locals:
-    local[2].format = 'isot'
-    print(local)
-
+# n = len(epochs)
+# locals = get_local_angles_via_state_propagation(x, params, epochs[0], epochs[n-1], n-2, obs_pos, Frames.LLA)
+# for local in locals:
+#     local[2].format = 'isot'
+#     print(local)
+print(epochs)
  # Date__(UT)__HR:MN     R.A.___(ICRF)___DEC R.A._(a-appar)_DEC. Azi_(a-appr)_Elev
  # 2020-Jul-20 00:00 *     0.05070  10.84112   0.31231  10.95381  47.0208 -36.3402
  # 2020-Jul-20 01:00 N   127.30069 -35.33755 127.48970 -35.40576 242.8426 -27.6417

@@ -57,13 +57,13 @@ def get_e(x):
     return e
 
 
-def get_satellite_position_over_time(x, epochs):
+def get_satellite_position_over_time(x, init_epoch, epochs):
     r = np.zeros((len(epochs), 3))
     r[0] = x[0:3]
+    params = PropParams(init_epoch)
     for i in range(1, len(epochs)):
-        params = PropParams(epochs[i])
-        x = state_propagate(x, epochs[i], params)
-        r[i] = x[0:3]
+        x_temp = state_propagate(x, epochs[i], params)
+        r[i] = x_temp[0:3]
     return r, epochs
 
 
