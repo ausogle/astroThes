@@ -19,7 +19,7 @@ dt = period / 100
 tf = period * 2
 epoch = Time(2454283.0, format="jd", scale="tdb")
 
-obs_pos = [29.2108, 81.0228, 3.9624]     #Daytona Beach, except 13 feet above sea level
+obs_pos = [29.2108 * u.deg, 81.0228 * u.deg, 3.9624 * u.km]     #Daytona Beach, except 13 feet above sea level
 prop_params = PropParams(epoch)
 step = period/32 * u.s
 epochs = build_epochs(epoch, step, 5)

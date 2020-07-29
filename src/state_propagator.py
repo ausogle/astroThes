@@ -53,14 +53,14 @@ def a_d(t0, state, k, perturbations: Dict):
         fun.append(J2_perturbation(t0, state, k, perturbation.J2, perturbation.R))
     if Perturbations.Drag in perturbations:
         perturbation = perturbations.get(Perturbations.Drag)
-        fun.append(atmospheric_drag_exponential(t0, state, k, perturbation.R, perturbation.C_D, perturbation.A,
-                                                perturbation.m, perturbation.H0, perturbation.rho0))
+        fun.append(atmospheric_drag_exponential(t0, state, k, perturbation.R, perturbation.C_D,
+                                                perturbation.A/perturbation.m, perturbation.H0, perturbation.rho0))
     if Perturbations.J3 in perturbations:
         perturbation = perturbations.get(Perturbations.J3)
         fun.append(J3_perturbation(t0, state, k, perturbation.J3, perturbation.R))
     if Perturbations.SRP in perturbations:
         perturbation = perturbations.get(Perturbations.SRP)
-        fun.append(radiation_pressure(t0, state, k, perturbation.R, perturbation.C_R, perturbation.A, perturbation.m,
+        fun.append(radiation_pressure(t0, state, k, perturbation.R, perturbation.C_R, perturbation.A/perturbation.m,
                                       perturbation.Wdivc_s, perturbation.star))
     if Perturbations.Moon in perturbations:
         perturbation = perturbations.get(Perturbations.Moon)

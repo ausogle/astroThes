@@ -2,7 +2,7 @@ import numpy as np
 from src.state_propagator import state_propagate
 from src.dto import PropParams
 from src.enums import Frames
-from src.frames import lla_to_ecef, eci_to_ecef
+from src.frames import lla_to_ecef, eci_to_ecef, ecef_to_eci
 from typing import List
 from astropy.time import Time
 from astropy.coordinates import Angle
@@ -63,31 +63,31 @@ def rotation_matrix(lat, lon):
     """
     return rz(lon) @ ry(lat)
 
-
-def get_local_angles_via_state_propagation(x: np.ndarray, prop_params: PropParams, epoch_i: Time, epoch_f: Time, n: int,
-                                           obs_pos_lla, obs_frame: Frames):
-    """
-    This function returns a list of [theta, phi, Time] from initial epoch in prop_params to final epoch, with an
-    n points between those two epochs.
-
-    :param x: State vector at initial epoch
-    :param prop_params: Parameters relevant to propagation. Includes initial
-    :param epoch_i: Epoch of first desired time
-    :param epoch_f: Epoch of final desired time
-    :param n: Number of desired points between initial and final epoch (Does not include those two)
-    :param obs_pos_lla: Observer location. Accepts list for LLA. [lat * u.deg, lon * u.deg, alt * u.km]
-    :param obs_frame: Frame observer location is in. Accepts Frames.LLA
-    """
-    assert obs_frame == Frames.LLA
-    obs_pos_ecef = lla_to_ecef(obs_pos_lla)
-
-    dt = (epoch_f - epoch_i) / (n+1)
-    output = []
-    for i in range(0, n + 2):
-        desired_epoch = epoch_i + dt * i
-        obj_pos_eci = state_propagate(x, desired_epoch, prop_params)[0:3]
-        obj_pos_ecef = eci_to_ecef(obj_pos_eci, desired_epoch)
-        rr = obj_pos_ecef - obs_pos_ecef
-        angles = local_angles(rr, obs_pos_lla)
-        output.append([angles[0], angles[1], desired_epoch])
-    return output
+#
+# def get_local_angles_via_state_propagation(x: np.ndarray, prop_params: PropParams, epoch_i: Time, epoch_f: Time, n: int,
+#                                            obs_pos_lla, obs_frame: Frames):
+#     """
+#     This function returns a list of [theta, phi, Time] from initial epoch in prop_params to final epoch, with an
+#     n points between those two epochs.
+#
+#     :param x: State vector at initial epoch
+#     :param prop_params: Parameters relevant to propagation. Includes initial
+#     :param epoch_i: Epoch of first desired time
+#     :param epoch_f: Epoch of final desired time
+#     :param n: Number of desired points between initial and final epoch (Does not include those two)
+#     :param obs_pos_lla: Observer location. Accepts list for LLA. [lat * u.deg, lon * u.deg, alt * u.km]
+#     :param obs_frame: Frame observer location is in. Accepts Frames.LLA
+#     """
+#     assert obs_frame == Frames.LLA
+#     obs_pos_ecef = lla_to_ecef(obs_pos_lla)
+#
+#     dt = (epoch_f - epoch_i) / (n+1)
+#     output = []
+#     for i in range(0, n + 2):
+#         desired_epoch = epoch_i + dt * i
+#         obj_pos_eci = state_propagate(x, desired_epoch, prop_params)[0:3]
+#         obj_pos_ecef = eci_to_ecef(obj_pos_eci, desired_epoch)
+#         rr = obj_pos_ecef - obs_pos_ecef
+#         angles = local_angles(rr, obs_pos_lla)
+#         output.append([angles[0], angles[1], desired_epoch])
+#     return output

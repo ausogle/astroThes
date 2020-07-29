@@ -42,10 +42,17 @@ class Observation:
         self.obs_type = obs_type
 
     def tostring(self):
-        return "[" + self.epoch + ", [" + \
-               str(self.position[0].value) + ", " + str(self.position[1].value) + ", " + str(self.position[2].value) + \
-               "], " + str(self.obs_values[0]) + "\u00B1" + str(self.obs_sigmas[0]) + ", " + \
-               str(self.obs_values[1]) + "\u00B1" + str(self.obs_sigmas[1]) + "]"
+        if self.frame == Frames.LLA:
+            return "[" + self.epoch.fits + ", [" +\
+                   str(self.position[0].value) + ", " + str(self.position[1].value) + ", " + str(self.position[2].value) + \
+                   "], " + str(self.obs_values[0]) + "\u00B1" + str(self.obs_sigmas[0]) + ", " + \
+                   str(self.obs_values[1]) + "\u00B1" + str(self.obs_sigmas[1]) + "]"
+        else:
+            return "[" + self.epoch.fits + ", [" +\
+                   str(self.position[0]) + ", " + str(self.position[1]) + ", " + str(self.position[2]) + \
+                   "], " + str(self.obs_values[0]) + "\u00B1" + str(self.obs_sigmas[0]) + ", " + \
+                   str(self.obs_values[1]) + "\u00B1" + str(self.obs_sigmas[1]) + "]"
+
 
 
 class PropParams:

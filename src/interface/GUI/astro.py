@@ -14,6 +14,7 @@ from src.enums import Perturbations, Frames, Angles
 from src.interface.string_conversions import dms_to_dd
 from src.interface.cleaning import convert_obs_from_lla_to_eci
 from src.core import milani
+from verification.util import get_period, build_epochs, build_observations
 
 tag_string = "Developed by Austin Ogle  Ver. 0.0.1  7/20/2020"
 
@@ -37,6 +38,7 @@ class MainWindow(Screen):
         self.delta_x_apr_label.text = "A priori \u0394 x:    " + str(self.delta_x_apr)
         self.p_apr_label.text = "A priori covariance:    "
         self.p_apr_value.text = str(self.p_apr)
+        self.observations_output.text = ""
         for observation in self.observations:
             self.observations_output.text += observation.tostring() + "\n"
 
@@ -50,18 +52,22 @@ class MainWindow(Screen):
         self.on_enter()
 
     def run_clicked(self):
-        obs_pos = [29.218103 * u.deg, -81.031723 * u.deg, 0 * u.km]
-        uncert = np.array([.1, .1])
-        obs_1 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:00:00.000", format="isot", scale="utc"), np.array([101.4555789, 32.40327788]), Angles.Celestial, uncert)
-        # obs_2 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:05:00.000", format="isot", scale="utc"), np.array([108.7213437, 8.01066546]), Angles.Celestial, uncert)
-        # obs_3 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:10:00.000", format="isot", scale="utc"), np.array([106.73201136, -6.72670735]), Angles.Celestial, uncert)
-        # obs_4 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:15:00.000", format="isot", scale="utc"), np.array([101.601932121, -17.24402305]), Angles.Celestial, uncert)
-        # self.observations = [convert_obs_from_lla_to_eci(obs_1), convert_obs_from_lla_to_eci(obs_2),
-        #                      convert_obs_from_lla_to_eci(obs_3), convert_obs_from_lla_to_eci(obs_4)]
-        self.observations = [convert_obs_from_lla_to_eci(obs_1)]
-        a_priori = FilterOutput(delta_x=self.delta_x_apr, p=self.p_apr)
-        sm.get_screen("results").output = milani(self.state, self.observations, PropParams(self.epoch), a_priori)
+        if self.validate_values():
+            a_priori = FilterOutput(delta_x=self.delta_x_apr, p=self.p_apr)
+            sm.get_screen("results").output = milani(self.state, self.observations, self.prop_params, a_priori)
+            sm.current = 'results'
 
+    def validate_values(self):
+        if np.array_equal(self.state, np.zeros(6)):
+            invalid_entry("Input state vector")
+            return False
+        if self.epoch == Time("2000-01-01T00:00:00.000", format='isot', scale='utc'):
+            invalid_entry("Input epoch")
+            return False
+        if self.observations is []:
+            invalid_entry("Input observations")
+            return False
+        return True
 
 class AddCoreValues(Screen):
     state = ObjectProperty(None)
@@ -380,10 +386,12 @@ class AddObservation(Screen):
                 dms_to_dd(self.lon.text)
         except ValueError:
             invalid_entry("The lat/lon inputs do not match expected format")
+            return False
         try:
             float(self.alt.text)
         except ValueError:
             invalid_entry("The alt input does not match expected format")
+            return False
         return True
 
     def get_obs_pos(self):
@@ -410,6 +418,30 @@ class AddObservation(Screen):
     def dms_active(self):
         self.lat.hint_text = "00 00\' 00\""
         self.lon.hint_text = "00 00\' 00\""
+
+    def demo_only(self):
+        # obs_pos = [29.218103 * u.deg, -81.031723 * u.deg, 0 * u.km]
+        # uncert = np.array([.1, .1])
+        # obs_1 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:00:00.000", format="isot", scale="utc"), np.array([102.4955789, 32.41327788]), Angles.Celestial, uncert)
+        # obs_2 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:05:00.000", format="isot", scale="utc"), np.array([108.7813437, 8.05766546]), Angles.Celestial, uncert)
+        # obs_3 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:10:00.000", format="isot", scale="utc"), np.array([106.70201136, -6.77670735]), Angles.Celestial, uncert)
+        # obs_4 = Observation(obs_pos, Frames.LLA, Time("2020-7-25T00:15:00.000", format="isot", scale="utc"), np.array([101.691932121, -17.20402305]), Angles.Celestial, uncert)
+        # self.observations = [convert_obs_from_lla_to_eci(obs_1), convert_obs_from_lla_to_eci(obs_2),
+        #                      convert_obs_from_lla_to_eci(obs_3), convert_obs_from_lla_to_eci(obs_4)]
+        x = np.array([5748.6001, 2679, 3443, 4.33, -1.922, -5.726])
+        x_offset = np.array([500, 100, 100, .2, .1, .1])
+        x_true = x + x_offset
+        period = get_period(x)
+        epoch = Time(2454283.0, format="jd", scale="tdb")
+        obs_pos = [29.2108 * u.deg, 81.0228 * u.deg, 3.9624 * u.km]  # Daytona Beach, except 13 feet above sea level
+        prop_params = PropParams(epoch)
+        step = period / 32 * u.s
+        epochs = build_epochs(epoch, step, 5)
+        observations = build_observations(x_true, prop_params, obs_pos, Frames.LLA, epochs)
+        self.observation_output.text = ""
+        for observation in observations:
+            self.observation_output.text += observation.tostring() + "\n"
+        sm.get_screen("main").observations = observations
 
 
 class ResultsScreen(Screen):

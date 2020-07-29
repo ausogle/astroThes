@@ -34,10 +34,8 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
     while not stopping_criteria(rms_new, rms_old) and i < max_iter:
         c = np.zeros((n, n))
         d = np.zeros(n)
-        print(i)
         rms_old = rms_new - 0
         for observation in observations:
-            print(i)
             ypred = y(state_propagate(x, observation.epoch, prop_params), observation)
             yobs = observation.obs_values
             xi = yobs - ypred
@@ -57,9 +55,9 @@ def milani(x: np.ndarray, observations: List[Observation], prop_params: PropPara
         i = i+1
 
     p = a_priori.p + get_inverse(c)
-    # covariance_residual = la.norm(p @ c - np.eye(6))
-    # print("Covariance Residual")
-    # print(covariance_residual)
+    covariance_residual = np.linalg.norm(p @ c - np.eye(6))
+    print("Covariance Residual")
+    print(covariance_residual)
 
     output = FilterOutput(x_in, prop_params.epoch, x, delta_x, p)
     return output

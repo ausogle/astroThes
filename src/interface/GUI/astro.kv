@@ -77,10 +77,10 @@
             text: "Observations:    "
 
         ScrollView:
-            do_scroll_x: False
+            do_scroll_x: True
             do_scroll_y: True
-            pos_hint:{"x": .15, "y":0.1}
-            size_hint:0.6, 0.2
+            pos_hint:{"x": .22, "y":0.1}
+            size_hint:0.45, 0.2
             border_color: 'red'
             Label:
                 halign: 'left'
@@ -109,7 +109,6 @@
             text: "Run"
             on_release:
                 root.run_clicked()
-                app.root.current = "results"
                 root.manager.transition.direction = "up"
 
         Label:
@@ -118,7 +117,7 @@
             halign: 'right'
             pos_hint:{"x": .6, "y": .0}
             size_hint:0.4, 0.05
-            text: "Developed by Austin Ogle  Ver. 0.0.1  7/17/2020"
+            text: "Developed by Austin Ogle  Ver. 0.0.1  7/29/2020"
 
 
 <AddCoreValues>:
@@ -666,16 +665,15 @@
             text: "Observations:    "
 
         ScrollView:
-            do_scroll_x: False
+            do_scroll_x: True
             do_scroll_y: True
             pos_hint:{"x": .2, "y":0.1}
-            size_hint:0.75, 0.2
+            size_hint:0.6, 0.2
             border_color: 'red'
             Label:
                 halign: 'left'
                 id: observation_output
                 size_hint_y: None
-                height: self.texture_size[1]
 
         Button:
             pos_hint:{"x":0.75, "y": .4}
@@ -699,6 +697,13 @@
             text: "Add Observation"
             on_release:
                 root.add_observation()
+
+        Button:
+            pos_hint:{"x":0.75, "y": .0}
+            size_hint:0.2,0.1
+            text: "DEMO ONLY"
+            on_release:
+                root.demo_only()
 
 <ResultsScreen>:
     output_text: output_text

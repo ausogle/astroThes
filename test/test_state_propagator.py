@@ -56,7 +56,7 @@ def test_propagate_with_drag():
     prop_params.add_perturbation(Perturbations.Drag, Drag)
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
-    sat_f = sat_i.propagate(dt, method=cowell, ad=atmospheric_drag_exponential, R=R, C_D=C_D, A=A, m=m, H0=H0_earth,
+    sat_f = sat_i.propagate(dt, method=cowell, ad=atmospheric_drag_exponential, R=R, C_D=C_D, A_over_m=A/m, H0=H0_earth,
                             rho0=rho0_earth)
     x_poli = np.concatenate([sat_f.r.value, sat_f.v.value])
 
@@ -95,7 +95,7 @@ def test_propagate_with_lunar_third_body():
     body_moon = build_ephem_interpolant(Moon, lunar_period, (epoch.value * u.day,
                                                              epoch.value * u.day + 60 * u.day), rtol=1e-2)
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
-    sat_f = sat_i.propagate(dt * u.s, method=cowell, ad=third_body, k_third=k_moon, third_body=body_moon)
+    sat_f = sat_i.propagate(dt * u.s, method=cowell, ad=third_body, k_third=k_moon, perturbation_body=body_moon)
     x_poli = np.concatenate([sat_f.r.value, sat_f.v.value])
 
     x_custom = state_propagate(np.array(x), epoch_f, prop_params)
@@ -116,7 +116,7 @@ def test_propagate_with_solar_third_body():
     body_sun = build_ephem_interpolant(Sun, solar_period, (epoch.value * u.day,
                                                            epoch.value * u.day + 60 * u.day), rtol=1e-2)
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
-    sat_f = sat_i.propagate(dt, method=cowell, ad=third_body, k_third=k_sun, third_body=body_sun)
+    sat_f = sat_i.propagate(dt, method=cowell, ad=third_body, k_third=k_sun, perturbation_body=body_sun)
     x_poli = np.concatenate([sat_f.r.value, sat_f.v.value])
 
     x_custom = state_propagate(x, epoch_obs, prop_params)
@@ -142,7 +142,7 @@ def test_propagate_with_srp():
 
     sat_i = Orbit.from_vectors(Earth, r, v, epoch=epoch)
     sat_f = sat_i.propagate(dt, method=cowell, ad=radiation_pressure,
-                            R=R, C_R=C_R, A=A, m=m, Wdivc_s=Wdivc_sun.value, star=body_sun)
+                            R=R, C_R=C_R, A_over_m=A/m, Wdivc_s=Wdivc_sun.value, star=body_sun)
     x_poli = np.concatenate([sat_f.r.value, sat_f.v.value])
 
     x_custom = state_propagate(x, epoch_obs, prop_params)
